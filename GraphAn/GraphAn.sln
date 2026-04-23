@@ -4,8 +4,14 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.14.36908.2
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GraphAn.UI", "GraphAn.UI\GraphAn.UI.csproj", "{B9353BA7-29F1-49BD-A91F-AD2428CE84F0}"
+	ProjectSection(ProjectDependencies) = postProject
+		{F23B30D2-D45F-49E4-BC44-967E3ED417E1} = {F23B30D2-D45F-49E4-BC44-967E3ED417E1}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GraphAn.BLL", "GraphAn.BLL\GraphAn.BLL.csproj", "{F23B30D2-D45F-49E4-BC44-967E3ED417E1}"
+	ProjectSection(ProjectDependencies) = postProject
+		{255BCD3C-2576-4B43-B8A5-85ED625787B1} = {255BCD3C-2576-4B43-B8A5-85ED625787B1}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GraphAn.DAL", "GraphAn.DAL\GraphAn.DAL.csproj", "{255BCD3C-2576-4B43-B8A5-85ED625787B1}"
 EndProject

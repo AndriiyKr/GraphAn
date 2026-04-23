@@ -15,8 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Services\" />
-    <Folder Include="Interfaces\" />
+    <ProjectReference Include="..\GraphAn.DAL\GraphAn.DAL.csproj" />
   </ItemGroup>
 
 </Project>

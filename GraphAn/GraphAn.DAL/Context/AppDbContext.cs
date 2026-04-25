@@ -8,6 +8,7 @@ namespace GraphAn.DAL.Context
     using DotNetEnv;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Logging;
+    using GraphAn.DAL.Models;
 
     /// <summary>
     /// Основний контекст бази даних додатка для взаємодії з PostgreSQL через Entity Framework Core.
@@ -84,6 +85,50 @@ namespace GraphAn.DAL.Context
                     optionsBuilder.EnableSensitiveDataLogging();
                 }
             }
+        }
+
+        // Added DbSet properties for EF Core
+        /// <summary>
+        /// Набір користувачів.
+        /// </summary>
+        public DbSet<User> Users { get; set; } = null!;
+
+        /// <summary>
+        /// Набір проєктів.
+        /// </summary>
+        public DbSet<Project> Projects { get; set; } = null!;
+
+        /// <summary>
+        /// Набір реєстрацій.
+        /// </summary>
+        public DbSet<Registration> Registrations { get; set; } = null!;
+
+        /// <summary>
+        /// Конфігурація моделі та зв'язків між сутностями.
+        /// </summary>
+        /// <param name="modelBuilder">Builder для моделі EF.</param>
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            // Налаштування сутності User
+            modelBuilder.Entity<User>(entity =>
+            {
+                // Робимо Email унікальним
+                entity.HasIndex(u => u.Email)
+                    .IsUnique();
+
+                // Зв'язок між User і Project (один-до-багатьох)
+                entity.HasMany(u => u.Projects)
+                    .WithOne(p => p.User)
+                    .HasForeignKey(p => p.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Мапінг назв таблиць на малі літери
+            modelBuilder.Entity<User>().ToTable("users");
+            modelBuilder.Entity<Project>().ToTable("projects");
+            modelBuilder.Entity<Registration>().ToTable("registrations");
         }
     }
 }

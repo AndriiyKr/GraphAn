@@ -5,8 +5,10 @@
 namespace GraphAn.UI
 {
     using System.Text;
-    using GraphAn.BLL;
     using Serilog;
+    using Microsoft.EntityFrameworkCore;
+    using GraphAn.DAL.Context;
+    using DotNetEnv;
 
     /// <summary>
     /// Забезпечує вхідну точку у програму.
@@ -24,6 +26,9 @@ namespace GraphAn.UI
 
             var builder = WebApplication.CreateBuilder(args);
 
+            // Load .env to ensure CONNECTION_STRING is available in environment variables during startup
+            Env.Load();
+
             Log.Logger = new LoggerConfiguration()
                 .ReadFrom.Configuration(builder.Configuration)
                 .Enrich.FromLogContext()
@@ -39,7 +44,48 @@ namespace GraphAn.UI
                 // Add services to the container.
                 builder.Services.AddControllersWithViews();
 
+                // Configure AppDbContext using CONNECTION_STRING from environment or configuration
+                var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING")
+                    ?? builder.Configuration.GetConnectionString("Supabase");
+
+                if (string.IsNullOrEmpty(connectionString))
+                {
+                    Log.Error("CONNECTION_STRING не встановлено. Перевірте .env або конфігурацію.");
+                    throw new InvalidOperationException("CONNECTION_STRING is not set.");
+                }
+
+                builder.Services.AddDbContext<AppDbContext>(options =>
+                {
+                    options.UseNpgsql(connectionString);
+
+                    if (builder.Environment.IsDevelopment())
+                    {
+                        options.EnableSensitiveDataLogging();
+                    }
+                });
+
                 var app = builder.Build();
+
+                using (var scope = app.Services.CreateScope())
+                {
+                    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                    try
+                    {
+                        // Намагаємося перевірити, чи доступна база
+                        if (dbContext.Database.CanConnect())
+                        {
+                            Log.Information("Успішне підключення до бази даних Supabase!");
+                        }
+                        else
+                        {
+                            Log.Error("Не вдалося підключитися до бази даних.");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Fatal(ex, "Помилка при перевірці підключення");
+                    }
+                }
 
                 app.UseSerilogRequestLogging();
 

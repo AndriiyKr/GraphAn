@@ -9,6 +9,7 @@ namespace GraphAn.UI
     using GraphAn.BLL.Interfaces;
     using GraphAn.BLL.Services;
     using GraphAn.DAL.Context;
+    using GraphAn.DAL.Repositories;
     using Microsoft.EntityFrameworkCore;
     using Serilog;
 
@@ -39,6 +40,10 @@ namespace GraphAn.UI
 
             builder.Host.UseSerilog();
             builder.Services.AddScoped<IEmailService, EmailService>();
+            builder.Services.AddScoped<IJwtService, JwtService>();
+            builder.Services.AddScoped<UserRepository>();
+            builder.Services.AddScoped<ProjectRepository>();
+            builder.Services.AddScoped<RegistrationRepository>();
 
             try
             {

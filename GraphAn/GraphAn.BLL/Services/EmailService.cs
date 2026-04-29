@@ -11,6 +11,7 @@ namespace GraphAn.BLL.Services
     using GraphAn.DAL.Repositories;
     using MailKit.Net.Smtp;
     using Microsoft.AspNetCore.Identity;
+    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Logging;
     using MimeKit;
 
@@ -49,7 +50,7 @@ namespace GraphAn.BLL.Services
         /// Кортеж, де <c>Success</c> — результат операції,
         /// <c>Message</c> — опис результату або помилки.
         /// </returns>
-        public async Task<(bool Success, string Message)> StartRegistrationAsync(string? email, string? password, string? username = null)
+        public async Task<(bool Success, string Message)> StartRegistrationAsync(string? email, string password, string? username)
         {
             if (this.IsEmailInvalid(email))
             {
@@ -167,14 +168,15 @@ namespace GraphAn.BLL.Services
 
         /// <summary>
         /// Перевірка і знаходження користувача для входу у акаунт.</summary>
+        /// <param name="email">Електронна адреса користувача.</param>
         /// <param name="password">Пароль.</param>
-        /// <param name="emailOrUsername">Електронна пошта або нікнейм користувача.</param>
+        /// <param name="username">Ім'я користувача (необов'язково).</param>
         /// <returns>
         /// Кортеж, де <c>Success</c> — результат операції,
         /// <c>Message</c> — опис результату або помилки.
         /// <c>User</c> — об'єкт користувача при успіху.
         /// </returns>
-        public async Task<(bool Success, string Message, User? User)> UserLoginAsync(string password, string? emailOrUsername)
+        public async Task<(bool Success, string Message, User? User)> UserLoginAsync(string? email, string password, string? username)
         {
             if (this.IsPasswordInvalid(password))
             {
@@ -182,32 +184,36 @@ namespace GraphAn.BLL.Services
                 return (false, "Некоректний пароль", null);
             }
 
-            if (emailOrUsername == null)
+            if (email == null && username == null)
             {
-                this.logger.LogWarning("Передано некоректний логін при вході у акаунт");
+                this.logger.LogWarning("Не передано логіну при вході у акаунт");
                 return (false, "Некоректний логін", null);
             }
 
-            User? user = await this.userRepository.GetByEmailAsync(emailOrUsername);
-
-            if (user == null)
+            User? user = null;
+            if (email != null)
             {
-                user = await this.userRepository.GetByUsernameAsync(emailOrUsername);
+                user = await this.userRepository.GetByEmailAsync(email);
+            }
+
+            if (user == null && username != null)
+            {
+                user = await this.userRepository.GetByUsernameAsync(username);
             }
 
             if (user == null)
             {
-                this.logger.LogWarning("Користувача з таким логіном не існує: {EmailOrUsername}", emailOrUsername);
+                this.logger.LogWarning("Користувача з таким логіном не існує: {Email}, {Username}", email, username);
                 return (false, "Користувача з таким логіном не існує", null);
             }
 
             if (!this.CheckIfPasswordCorrect(user, password!))
             {
-                this.logger.LogWarning("Передано невірний пароль при вході у акаунт: {EmailOrUsername}", emailOrUsername);
+                this.logger.LogWarning("Передано невірний пароль при вході у акаунт: {Email}, {Username}", email, username);
                 return (false, "Невірний пароль", null);
             }
 
-            this.logger.LogInformation("Користувача успішно перевірено при входжені у акаунт: {EmailOrUsername}", emailOrUsername);
+            this.logger.LogInformation("Користувача успішно перевірено при вході у акаунт: {Email}, {Username}", email, username);
             return (true, "Успішно знайдено", user);
         }
 

@@ -6,9 +6,9 @@ namespace GraphAn.DAL.Context
 {
     using System;
     using DotNetEnv;
+    using GraphAn.DAL.Models;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Logging;
-    using GraphAn.DAL.Models;
 
     /// <summary>
     /// Основний контекст бази даних додатка для взаємодії з PostgreSQL через Entity Framework Core.
@@ -59,6 +59,21 @@ namespace GraphAn.DAL.Context
         }
 
         /// <summary>
+        /// Gets or sets набір користувачів. Added DbSet properties for EF Core.
+        /// </summary>
+        public DbSet<User> Users { get; set; } = null!;
+
+        /// <summary>
+        /// Gets or sets набір проєктів.
+        /// </summary>
+        public DbSet<Project> Projects { get; set; } = null!;
+
+        /// <summary>
+        /// Gets or sets набір реєстрацій.
+        /// </summary>
+        public DbSet<Registration> Registrations { get; set; } = null!;
+
+        /// <summary>
         /// Конфігурує параметри підключення до бази даних, якщо вони не були задані ззовні.
         /// Використовує бібліотеку DotNetEnv для зчитування змінних середовища та налаштовує
         ///  підключення до PostgreSQL з розширеним логуванням для режиму розробки.
@@ -86,22 +101,6 @@ namespace GraphAn.DAL.Context
                 }
             }
         }
-
-        // Added DbSet properties for EF Core
-        /// <summary>
-        /// Набір користувачів.
-        /// </summary>
-        public DbSet<User> Users { get; set; } = null!;
-
-        /// <summary>
-        /// Набір проєктів.
-        /// </summary>
-        public DbSet<Project> Projects { get; set; } = null!;
-
-        /// <summary>
-        /// Набір реєстрацій.
-        /// </summary>
-        public DbSet<Registration> Registrations { get; set; } = null!;
 
         /// <summary>
         /// Конфігурація моделі та зв'язків між сутностями.

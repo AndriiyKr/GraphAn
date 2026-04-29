@@ -55,7 +55,7 @@ namespace GraphAn.DAL.Models
         /// Отримує або задає дату створення акаунту.
         /// </summary>
         [Column("created_at")]
-        public DateTime CreatedAt { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         /// <summary>
         /// Отримує або задає список проектів, що належать користувачу.

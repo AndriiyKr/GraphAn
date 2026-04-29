@@ -5,10 +5,12 @@
 namespace GraphAn.UI
 {
     using System.Text;
-    using Serilog;
-    using Microsoft.EntityFrameworkCore;
-    using GraphAn.DAL.Context;
     using DotNetEnv;
+    using GraphAn.BLL.Interfaces;
+    using GraphAn.BLL.Services;
+    using GraphAn.DAL.Context;
+    using Microsoft.EntityFrameworkCore;
+    using Serilog;
 
     /// <summary>
     /// Забезпечує вхідну точку у програму.
@@ -36,6 +38,7 @@ namespace GraphAn.UI
                 .CreateLogger();
 
             builder.Host.UseSerilog();
+            builder.Services.AddScoped<IEmailService, EmailService>();
 
             try
             {

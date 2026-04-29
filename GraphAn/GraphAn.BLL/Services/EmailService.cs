@@ -46,8 +46,8 @@ namespace GraphAn.BLL.Services
         /// <param name="password">Пароль.</param>
         /// <param name="username">Назва користувача.</param>
         /// <returns>
-        /// "1" — якщо користувача було зареєстровано;
-        /// "опис помилки" — якщо ні.
+        /// Кортеж, де <c>Success</c> — результат операції,
+        /// <c>Message</c> — опис результату або помилки.
         /// </returns>
         public async Task<(bool Success, string Message)> StartRegistrationAsync(string? email, string? password, string? username = null)
         {
@@ -75,13 +75,6 @@ namespace GraphAn.BLL.Services
                 return (false, "Користувач з таким email уже існує уже створив запит на реєстрацію");
             }
 
-            User tempUser = new User
-            {
-                Id = Guid.NewGuid(),
-                Email = email!,
-                Username = username ?? "temp",
-            };
-
             string verificationCode = this.GenerateCode();
             var registration = new Registration
             {
@@ -89,11 +82,9 @@ namespace GraphAn.BLL.Services
                 Email = email!,
                 VerificationCode = verificationCode,
                 CodeExpiryTime = DateTime.UtcNow.AddMinutes(10),
-                TempPasswordHash = this.GetPassworHash(tempUser, password!),
+                TempPasswordHash = this.GetPasswordHash(password!),
                 TempUsername = username ?? "Anonymous user",
             };
-
-            await this.registrationRepository.AddAsync(registration);
 
             bool sendResult = await this.SendVerificationCodeAsync(email!, verificationCode);
             if (!sendResult)
@@ -103,9 +94,121 @@ namespace GraphAn.BLL.Services
                 return (false, "Помилка надсилання коду.");
             }
 
+            await this.registrationRepository.AddAsync(registration);
+
             this.logger.LogInformation("Тимчасовий запис реєстрації створено для користувача: {Email}", email);
 
             return (true, "Запис успішно створено. Код було відправлено на вашу пошту.");
+        }
+
+        /// <summary>
+        /// Підтвердити реєстрацію з кодом від користувача.
+        /// </summary>
+        /// <param name="email">Електронна пошта користувача.</param>
+        /// <param name="code">Код.</param>
+        /// <returns>
+        /// Кортеж, де <c>Success</c> — результат операції,
+        /// <c>Message</c> — опис результату або помилки.
+        /// </returns>
+        public async Task<(bool Success, string Message)> ConfirmRegistrationAsync(string? email, string? code)
+        {
+            if (this.IsEmailInvalid(email))
+            {
+                this.logger.LogWarning("Передано некоректний email: {Email}", email);
+                return (false, "Некоректний email");
+            }
+
+            if (this.IsCodeInvalid(code))
+            {
+                this.logger.LogWarning("Передано некоректний code: {Code}", code);
+                return (false, "Некоректний код");
+            }
+
+            if (await this.userRepository.IfEmailExistsAsync(email!))
+            {
+                this.logger.LogWarning("Користувач з таким email уже існує: {Email}", email);
+                return (false, "Користувач з таким email уже існує");
+            }
+
+            var registration = await this.registrationRepository.GetByEmailAsync(email!);
+
+            if (registration == null)
+            {
+                this.logger.LogWarning("Не знайдено реєстрації для підтвердження користувача: {Email}", email);
+                return (false, "Не знайдено реєстрації для підтвердження");
+            }
+
+            if (!string.Equals(registration.VerificationCode, code, StringComparison.Ordinal))
+            {
+                this.logger.LogInformation("Не правильний код для підтвердження реєстрації користувача: {Email}", email);
+                return (false, "Не правильний код для підтвердження реєстрації");
+            }
+
+            if (registration.CodeExpiryTime < DateTime.UtcNow)
+            {
+                this.logger.LogInformation("Час для підтвердження реєстрації користувача: {Email} було вичерпано", email);
+                return (false, "Час для підтвердження реєстрації було вичерпано");
+            }
+
+            User user = new User
+            {
+                Id = Guid.NewGuid(),
+                Email = email!,
+                Username = registration.TempUsername ?? "Anonymous user",
+                PasswordHash = registration.TempPasswordHash,
+            };
+
+            await this.userRepository.AddAsync(user);
+            await this.registrationRepository.DeleteAsync(registration);
+
+            this.logger.LogInformation("Користувача: {Email} було успішно зареєстровано", email);
+            return (true, "Успішно зареєстровано");
+        }
+
+        /// <summary>
+        /// Перевірка і знаходження користувача для входу у акаунт.</summary>
+        /// <param name="password">Пароль.</param>
+        /// <param name="emailOrUsername">Електронна пошта або нікнейм користувача.</param>
+        /// <returns>
+        /// Кортеж, де <c>Success</c> — результат операції,
+        /// <c>Message</c> — опис результату або помилки.
+        /// <c>User</c> — об'єкт користувача при успіху.
+        /// </returns>
+        public async Task<(bool Success, string Message, User? User)> UserLoginAsync(string password, string? emailOrUsername)
+        {
+            if (this.IsPasswordInvalid(password))
+            {
+                this.logger.LogWarning("Передано некоректний пароль при вході у акаунт");
+                return (false, "Некоректний пароль", null);
+            }
+
+            if (emailOrUsername == null)
+            {
+                this.logger.LogWarning("Передано некоректний логін при вході у акаунт");
+                return (false, "Некоректний логін", null);
+            }
+
+            User? user = await this.userRepository.GetByEmailAsync(emailOrUsername);
+
+            if (user == null)
+            {
+                user = await this.userRepository.GetByUsernameAsync(emailOrUsername);
+            }
+
+            if (user == null)
+            {
+                this.logger.LogWarning("Користувача з таким логіном не існує: {EmailOrUsername}", emailOrUsername);
+                return (false, "Користувача з таким логіном не існує", null);
+            }
+
+            if (!this.CheckIfPasswordCorrect(user, password!))
+            {
+                this.logger.LogWarning("Передано невірний пароль при вході у акаунт: {EmailOrUsername}", emailOrUsername);
+                return (false, "Невірний пароль", null);
+            }
+
+            this.logger.LogInformation("Користувача успішно перевірено при входжені у акаунт: {EmailOrUsername}", emailOrUsername);
+            return (true, "Успішно знайдено", user);
         }
 
         /// <summary>
@@ -114,7 +217,7 @@ namespace GraphAn.BLL.Services
         /// <param name="email">Електронна адреса користувача, на яку буде надіслано код.</param>
         /// <param name="code">Код підтвердження, який потрібно надіслати користувачу.</param>
         /// <returns>Асинхронна операція відправлення email-повідомлення.</returns>
-        public async Task<bool> SendVerificationCodeAsync(string email, string code)
+        private async Task<bool> SendVerificationCodeAsync(string email, string code)
         {
             var emailUser = Environment.GetEnvironmentVariable("EMAIL_USER");
             var emailPass = Environment.GetEnvironmentVariable("EMAIL_PASS");
@@ -157,10 +260,9 @@ namespace GraphAn.BLL.Services
             return true;
         }
 
-        private string GetPassworHash(User user, string password)
+        private string GetPasswordHash(string password)
         {
-            var hasher = new PasswordHasher<User>();
-            return hasher.HashPassword(user, password);
+            return new PasswordHasher<User>().HashPassword(new User(), password);
         }
 
         private bool CheckIfPasswordCorrect(User user, string password)
@@ -218,6 +320,26 @@ namespace GraphAn.BLL.Services
             }
 
             if (password.Length > 255)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool IsCodeInvalid(string? code)
+        {
+            if (code == null)
+            {
+                return true;
+            }
+
+            if (code.Length != 6)
+            {
+                return true;
+            }
+
+            if (!code.All(char.IsDigit))
             {
                 return true;
             }

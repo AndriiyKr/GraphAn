@@ -4,6 +4,8 @@
 
 namespace GraphAn.BLL.Interfaces
 {
+    using GraphAn.DAL.Models;
+
     /// <summary>
     /// Контракт для сервісу роботи з електронною поштою.
     /// </summary>
@@ -15,18 +17,35 @@ namespace GraphAn.BLL.Interfaces
         /// <param name="email">Електронна адреса користувача.</param>
         /// <param name="password">Пароль користувача.</param>
         /// <param name="username">Ім'я користувача (необов'язково).</param>
-        /// <returns>Результат операції (успіх/помилка та повідомлення).</returns>
+        /// <returns>
+        /// Кортеж, де <c>Success</c> — результат операції,
+        /// <c>Message</c> — опис результату або помилки.
+        /// </returns>
         Task<(bool Success, string Message)> StartRegistrationAsync(
             string? email,
             string? password,
             string? username = null);
 
         /// <summary>
-        /// Відправляє код підтвердження на email користувача.
+        /// Підтвердити реєстрацію з кодом від користувача.
         /// </summary>
-        /// <param name="email">Електронна адреса отримувача.</param>
-        /// <param name="code">Код підтвердження.</param>
-        /// <returns>True якщо email успішно відправлено, інакше false.</returns>
-        Task<bool> SendVerificationCodeAsync(string email, string code);
+        /// <param name="email">Електронна пошта користувача.</param>
+        /// <param name="code">Код.</param>
+        /// <returns>
+        /// Кортеж, де <c>Success</c> — результат операції,
+        /// <c>Message</c> — опис результату або помилки.
+        /// </returns>
+        Task<(bool Success, string Message)> ConfirmRegistrationAsync(string? email, string? code);
+
+        /// <summary>
+        /// Перевірка і знаходження користувача для входу у акаунт.</summary>
+        /// <param name="password">Пароль.</param>
+        /// <param name="emailOrUsername">Електронна пошта або нікнейм користувача.</param>
+        /// <returns>
+        /// Кортеж, де <c>Success</c> — результат операції,
+        /// <c>Message</c> — опис результату або помилки.
+        /// <c>User</c> — об'єкт користувача при успіху.
+        /// </returns>
+        Task<(bool Success, string Message, User? User)> UserLoginAsync(string password, string? emailOrUsername);
     }
 }

@@ -33,6 +33,16 @@ namespace GraphAn.DAL.Repositories
         }
 
         /// <summary>
+        /// Отримання користувача за username.
+        /// </summary>
+        /// <param name="username">username користувача.</param>
+        /// <returns> <see cref="User"/> якщо знайдено; інакше <see langword="null"/>.</returns>
+        public async Task<User?> GetByUsernameAsync(string username)
+        {
+            return await this.DbSet.FirstOrDefaultAsync(u => u.Username == username);
+        }
+
+        /// <summary>
         /// Перевірка існування користувача з переданим email.
         /// </summary>
         /// <param name="email">email користувача.</param>

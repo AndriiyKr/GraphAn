@@ -23,13 +23,23 @@ namespace GraphAn.DAL.Repositories
         }
 
         /// <summary>
-        /// Перевірка існування користувача з переданим email.
+        /// Перевірка існування реєстрації з переданим email.
         /// </summary>
         /// <param name="email">email користувача.</param>
         /// <returns> <see langword="true"/> якщо знайдено; інакше <see langword="false"/>.</returns>
         public async Task<bool> IfEmailExistsAsync(string email)
         {
             return await this.DbSet.AnyAsync(u => u.Email == email);
+        }
+
+        /// <summary>
+        /// Отримання реєстрації за email.
+        /// </summary>
+        /// <param name="email">email користувача.</param>
+        /// <returns> <see cref="Registration"/> якщо знайдено; інакше <see langword="null"/>.</returns>
+        public async Task<Registration?> GetByEmailAsync(string email)
+        {
+            return await this.DbSet.FirstOrDefaultAsync(u => u.Email == email);
         }
     }
 }

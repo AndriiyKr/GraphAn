@@ -29,7 +29,6 @@ namespace GraphAn.UI
 
             var builder = WebApplication.CreateBuilder(args);
 
-            // Load .env to ensure CONNECTION_STRING is available in environment variables during startup
             Env.Load();
 
             Log.Logger = new LoggerConfiguration()
@@ -41,6 +40,7 @@ namespace GraphAn.UI
             builder.Host.UseSerilog();
             builder.Services.AddScoped<IEmailService, EmailService>();
             builder.Services.AddScoped<IJwtService, JwtService>();
+            builder.Services.AddScoped<IProjectService, ProjectService>();
             builder.Services.AddScoped<UserRepository>();
             builder.Services.AddScoped<ProjectRepository>();
             builder.Services.AddScoped<RegistrationRepository>();
@@ -111,6 +111,7 @@ namespace GraphAn.UI
 
                 app.UseRouting();
 
+                app.UseAuthentication();
                 app.UseAuthorization();
 
                 app.MapControllerRoute(

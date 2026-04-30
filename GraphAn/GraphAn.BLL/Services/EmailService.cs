@@ -50,7 +50,10 @@ namespace GraphAn.BLL.Services
         /// Кортеж, де <c>Success</c> — результат операції,
         /// <c>Message</c> — опис результату або помилки.
         /// </returns>
-        public async Task<(bool Success, string Message)> StartRegistrationAsync(string? email, string password, string? username)
+        public async Task<(bool Success, string Message)> StartRegistrationAsync(
+            string? email,
+            string password,
+            string? username = null)
         {
             if (this.IsEmailInvalid(email))
             {
@@ -176,7 +179,10 @@ namespace GraphAn.BLL.Services
         /// <c>Message</c> — опис результату або помилки.
         /// <c>User</c> — об'єкт користувача при успіху.
         /// </returns>
-        public async Task<(bool Success, string Message, User? User)> UserLoginAsync(string? email, string password, string? username)
+        public async Task<(bool Success, string Message, User? User)> UserLoginAsync(
+            string? email,
+            string password,
+            string? username)
         {
             if (this.IsPasswordInvalid(password))
             {

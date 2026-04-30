@@ -22,7 +22,9 @@ namespace GraphAn.BLL.Interfaces
         /// <c>Message</c> — опис результату або помилки.
         /// </returns>
         Task<(bool Success, string Message)> StartRegistrationAsync(
-            string? email, string password, string? username);
+            string? email,
+            string password,
+            string? username);
 
         /// <summary>
         /// Підтвердити реєстрацію з кодом від користувача.
@@ -45,6 +47,9 @@ namespace GraphAn.BLL.Interfaces
         /// <c>Message</c> — опис результату або помилки.
         /// <c>User</c> — об'єкт користувача при успіху.
         /// </returns>
-        Task<(bool Success, string Message, User? User)> UserLoginAsync(string? email, string password, string? username);
+        Task<(bool Success, string Message, User? User)> UserLoginAsync(
+            string? email,
+            string password,
+            string? username);
     }
 }

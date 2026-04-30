@@ -10,27 +10,27 @@ namespace GraphAn.UI.ViewModels
     public class ProjectResponse
     {
         /// <summary>
-        /// Gets or sets ідентифікатор проекту.
+        /// Отримує або задає ідентифікатор проекту.
         /// </summary>
         public Guid ProjectId { get; set; }
 
         /// <summary>
-        /// Gets or sets назву проекту.
+        /// Отримує або задає назву проекту.
         /// </summary>
         public string Name { get; set; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets дані графа у форматі JSON.
+        /// Отримує або задає дані графа у форматі JSON.
         /// </summary>
         public string GraphData { get; set; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets час створення проекту.
+        /// Отримує або задає час створення проекту.
         /// </summary>
         public DateTime CreatedAt { get; set; }
 
         /// <summary>
-        /// Gets or sets час останнього оновлення проекту.
+        /// Отримує або задає час останнього оновлення проекту.
         /// </summary>
         public DateTime UpdatedAt { get; set; }
     }

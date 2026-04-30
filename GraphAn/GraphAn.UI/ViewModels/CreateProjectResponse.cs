@@ -10,12 +10,12 @@ namespace GraphAn.UI.ViewModels
     public class CreateProjectResponse
     {
         /// <summary>
-        /// Gets or sets ідентифікатор створеного проекту.
+        /// Отримує або задає ідентифікатор створеного проекту.
         /// </summary>
         public Guid ProjectId { get; set; }
 
         /// <summary>
-        /// Gets or sets повідомлення про результат операції.
+        /// Отримує або задає повідомлення про результат операції.
         /// </summary>
         public string Message { get; set; } = string.Empty;
     }

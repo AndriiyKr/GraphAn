@@ -10,12 +10,12 @@ namespace GraphAn.UI.ViewModels
     public class CodeConfirmRequest
     {
         /// <summary>
-        /// Gets or sets електронна пошта користувача.
+        /// Отримує або задає електронна пошта користувача.
         /// </summary>
         public string Email { get; set; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets код підтвердження.
+        /// Отримує або задає код підтвердження.
         /// </summary>
         public string Code { get; set; } = string.Empty;
     }

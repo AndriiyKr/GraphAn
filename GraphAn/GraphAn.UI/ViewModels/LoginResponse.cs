@@ -10,22 +10,22 @@ namespace GraphAn.UI.ViewModels
     public class LoginResponse
     {
         /// <summary>
-        /// Gets or sets JWT токен автентифікації.
+        /// Отримує або задає JWT токен автентифікації.
         /// </summary>
         public string Token { get; set; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets унікальний ідентифікатор користувача.
+        /// Отримує або задає унікальний ідентифікатор користувача.
         /// </summary>
         public Guid UserId { get; set; }
 
         /// <summary>
-        /// Gets or sets ім'я користувача.
+        /// Отримує або задає ім'я користувача.
         /// </summary>
         public string Username { get; set; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets електронну пошту користувача.
+        /// Отримує або задає електронну пошту користувача.
         /// </summary>
         public string Email { get; set; } = string.Empty;
     }

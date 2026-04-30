@@ -10,7 +10,7 @@ namespace GraphAn.UI.ViewModels
     public class ErrorResponse
     {
         /// <summary>
-        /// Gets or sets опис помилки.
+        /// Отримує або задає опис помилки.
         /// </summary>
         public string Message { get; set; } = string.Empty;
     }

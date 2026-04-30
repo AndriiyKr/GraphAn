@@ -10,7 +10,7 @@ namespace GraphAn.UI.ViewModels
     public class ProjectListResponse
     {
         /// <summary>
-        /// Gets or sets список проектів.
+        /// Отримує або задає список проектів.
         /// </summary>
         public List<ProjectShortResponse> Projects { get; set; } = new List<ProjectShortResponse>();
     }

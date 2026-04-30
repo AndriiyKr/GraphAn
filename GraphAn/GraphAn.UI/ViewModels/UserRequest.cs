@@ -10,17 +10,17 @@ namespace GraphAn.UI.ViewModels
     public class UserRequest
     {
         /// <summary>
-        /// Gets or sets електронну пошту користувача.
+        /// Отримує або задає електронну пошту користувача.
         /// </summary>
         public string Email { get; set; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets ім'я користувача.
+        /// Отримує або задає ім'я користувача.
         /// </summary>
         public string Username { get; set; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets пароль користувача.
+        /// Отримує або задає пароль користувача.
         /// </summary>
         public string Password { get; set; } = string.Empty;
     }

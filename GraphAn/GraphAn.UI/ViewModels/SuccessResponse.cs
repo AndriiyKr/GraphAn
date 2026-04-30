@@ -10,7 +10,7 @@ namespace GraphAn.UI.ViewModels
     public class SuccessResponse
     {
         /// <summary>
-        /// Gets or sets опис результату операції.
+        /// Отримує або задає опис результату операції.
         /// </summary>
         public string Message { get; set; } = string.Empty;
     }

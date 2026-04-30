@@ -10,7 +10,7 @@ namespace GraphAn.UI.ViewModels
     public class CreateProjectRequest
     {
         /// <summary>
-        /// Gets or sets назву проекту.
+        /// Отримує або задає назву проекту.
         /// </summary>
         public string? Name { get; set; }
     }

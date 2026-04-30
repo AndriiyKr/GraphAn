@@ -10,12 +10,12 @@ namespace GraphAn.BLL.Models
     public class DijkstraResult
     {
         /// <summary>
-        /// Отримує або задає список вершин шляху.
+        /// Отримує або задає список вершин шляху. (порядок вершин).
         /// </summary>
         public List<string> PathNodes { get; set; } = new List<string>();
 
         /// <summary>
-        /// Отримує або задає список ідентифікаторів ребер шляху.
+        /// Отримує або задає список ідентифікаторів ребер шляху. (ребра шляху).
         /// </summary>
         public List<string> PathEdges { get; set; } = new List<string>();
 

@@ -1,10 +1,12 @@
-﻿using System;
-using Microsoft.EntityFrameworkCore.Migrations;
-
-#nullable disable
+﻿// <copyright file="20260425074307_InitialCreate.cs" company="GraphAn">
+// Copyright (c) GraphAn. All rights reserved.
+// </copyright>
 
 namespace GraphAn.DAL.Migrations
 {
+    using System;
+    using Microsoft.EntityFrameworkCore.Migrations;
+
     /// <inheritdoc />
     public partial class InitialCreate : Migration
     {
@@ -20,7 +22,7 @@ namespace GraphAn.DAL.Migrations
                     verification_code = table.Column<string>(type: "text", nullable: false),
                     code_expiry_time = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     temp_password_hash = table.Column<string>(type: "text", nullable: false),
-                    temp_username = table.Column<string>(type: "text", nullable: false)
+                    temp_username = table.Column<string>(type: "text", nullable: false),
                 },
                 constraints: table =>
                 {
@@ -35,7 +37,7 @@ namespace GraphAn.DAL.Migrations
                     username = table.Column<string>(type: "text", nullable: false),
                     email = table.Column<string>(type: "text", nullable: false),
                     password_hash = table.Column<string>(type: "text", nullable: false),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                 },
                 constraints: table =>
                 {
@@ -51,7 +53,7 @@ namespace GraphAn.DAL.Migrations
                     name = table.Column<string>(type: "text", nullable: false),
                     graph_data = table.Column<string>(type: "jsonb", nullable: false),
                     created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                 },
                 constraints: table =>
                 {

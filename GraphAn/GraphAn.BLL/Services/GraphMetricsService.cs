@@ -421,6 +421,23 @@ namespace GraphAn.BLL.Services
             };
         }
 
+        /// <inheritdoc/>
+        public GraphMetricsResult GetAllMetrics(GraphDto graph)
+        {
+            this.logger.LogInformation("Обчислення всіх метрик графа");
+
+            return new GraphMetricsResult
+            {
+                Info = this.GetGraphInfo(graph),
+                AdjacencyMatrix = this.GetAdjacencyMatrix(graph),
+                IncidenceMatrix = this.GetIncidenceMatrix(graph),
+                AdjacencyList = this.GetAdjacencyList(graph),
+                CycleAndChromatic = this.GetCycleAndChromatic(graph),
+                Connectivity = this.GetConnectivity(graph),
+                IndependenceAndClique = this.GetIndependenceAndClique(graph),
+            };
+        }
+
         /// <summary>
         /// Перевіряє чи є граф зв'язним після видалення вершин або ребер.
         /// </summary>

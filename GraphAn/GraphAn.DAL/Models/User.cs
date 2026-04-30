@@ -16,7 +16,7 @@ namespace GraphAn.DAL.Models
     public class User
     {
         /// <summary>
-        /// Ініціалізує новий екземпляр класу <see cref="User"/>.
+        /// Initializes a new instance of the <see cref="User"/> class.
         /// </summary>
         public User()
         {
@@ -35,21 +35,21 @@ namespace GraphAn.DAL.Models
         /// </summary>
         [Required]
         [Column("username")]
-        public string Username { get; set; }
+        required public string Username { get; set; }
 
         /// <summary>
         /// Отримує або задає електронну пошту (унікальну).
         /// </summary>
         [Required]
         [Column("email")]
-        public string Email { get; set; }
+        required public string Email { get; set; }
 
         /// <summary>
         /// Отримує або задає хешований пароль.
         /// </summary>
         [Required]
         [Column("password_hash")]
-        public string PasswordHash { get; set; }
+        required public string PasswordHash { get; set; }
 
         /// <summary>
         /// Отримує або задає дату створення акаунту.

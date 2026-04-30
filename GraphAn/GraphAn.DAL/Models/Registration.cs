@@ -26,14 +26,14 @@ namespace GraphAn.DAL.Models
         /// </summary>
         [Required]
         [Column("email")]
-        public string Email { get; set; }
+        required public string Email { get; set; }
 
         /// <summary>
         /// Отримує або задає код верифікації.
         /// </summary>
         [Required]
         [Column("verification_code")]
-        public string VerificationCode { get; set; }
+        required public string VerificationCode { get; set; }
 
         /// <summary>
         /// Отримує або задає час закінчення дії коду.
@@ -46,13 +46,13 @@ namespace GraphAn.DAL.Models
         /// </summary>
         [Required]
         [Column("temp_password_hash")]
-        public string TempPasswordHash { get; set; }
+        required public string TempPasswordHash { get; set; }
 
         /// <summary>
         /// Отримує або задає тимчасовий нікнейм.
         /// </summary>
         [Required]
         [Column("temp_username")]
-        public string TempUsername { get; set; }
+        required public string TempUsername { get; set; }
     }
 }

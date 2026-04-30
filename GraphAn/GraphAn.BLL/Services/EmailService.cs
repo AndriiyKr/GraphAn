@@ -20,6 +20,13 @@ namespace GraphAn.BLL.Services
     /// </summary>
     public class EmailService : IEmailService
     {
+        private static readonly User SystemUser = new ()
+        {
+            Username = "system",
+            Email = "system@local",
+            PasswordHash = string.Empty,
+        };
+
         private readonly ILogger<EmailService> logger;
         private readonly UserRepository userRepository;
         private readonly RegistrationRepository registrationRepository;
@@ -274,7 +281,7 @@ namespace GraphAn.BLL.Services
 
         private string GetPasswordHash(string password)
         {
-            return new PasswordHasher<User>().HashPassword(new User(), password);
+            return new PasswordHasher<User>().HashPassword(SystemUser, password);
         }
 
         private bool CheckIfPasswordCorrect(User user, string password)

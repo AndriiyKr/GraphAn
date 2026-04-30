@@ -32,13 +32,13 @@ namespace GraphAn.DAL.Models
         /// </summary>
         [Required]
         [Column("name")]
-        public string Name { get; set; }
+        required public string Name { get; set; }
 
         /// <summary>
         /// Отримує або задає дані графа у форматі JSON.
         /// </summary>
         [Column("graph_data", TypeName = "jsonb")]
-        public string GraphData { get; set; }
+        public string? GraphData { get; set; }
 
         /// <summary>
         /// Отримує або задає час створення.
@@ -56,6 +56,6 @@ namespace GraphAn.DAL.Models
         /// Отримує або задає навігаційну властивість до користувача.
         /// </summary>
         [ForeignKey(nameof(UserId))]
-        public virtual User User { get; set; }
+        public virtual User? User { get; set; }
     }
 }

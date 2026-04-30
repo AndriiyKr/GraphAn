@@ -12,6 +12,13 @@ namespace GraphAn.BLL.Interfaces
     public interface IGraphMetricsService
     {
         /// <summary>
+        /// Обчислює всі метрики графа.
+        /// </summary>
+        /// <param name="graph">Модель графа.</param>
+        /// <returns>Всі метрики графа.</returns>
+        GraphMetricsResult GetAllMetrics(GraphDto graph);
+
+        /// <summary>
         /// Отримує базову інформацію про граф.
         /// </summary>
         /// <param name="graph">Модель графа.</param>

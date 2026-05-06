@@ -1,0 +1,107 @@
+﻿@{
+    ViewData["Title"] = "Підтвердження реєстрації";
+}
+
+<div class="container mt-5" style="max-width: 500px;">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Підтвердження реєстрації</h4>
+        </div>
+        <div class="card-body">
+            <p>На вашу електронну пошту надіслано 6-значний код. Введіть його нижче для завершення реєстрації.</p>
+
+            <form id="confirmForm">
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="email" name="email" required
+                           value="@ViewBag.Email" placeholder="your@email.com">
+                    <div class="invalid-feedback">Будь ласка, введіть коректну адресу.</div>
+                </div>
+                <div class="mb-3">
+                    <label for="code" class="form-label">Код підтвердження</label>
+                    <input type="text" class="form-control" id="code" name="code" required
+                           maxlength="6" pattern="\d{6}" placeholder="123456">
+                    <div class="invalid-feedback">Код має містити 6 цифр.</div>
+                </div>
+                <button type="submit" class="btn btn-success w-100">Підтвердити</button>
+            </form>
+
+            <div id="message" class="mt-3"></div>
+            <hr />
+            <div class="text-center">
+                <small>Не отримали код? <a href="#" id="resendLink">Надіслати повторно</a></small>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const form = document.getElementById('confirmForm');
+        const messageDiv = document.getElementById('message');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value.trim();
+            const code = document.getElementById('code').value.trim();
+
+            // Валідація
+            if (!email || !code) {
+                showMessage('Заповніть всі поля.', 'danger');
+                return;
+            }
+            if (!/^\d{6}$/.test(code)) {
+                showMessage('Код має складатися рівно з 6 цифр.', 'danger');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/auth/confirm', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, code })
+                });
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage('Реєстрацію підтверджено! Виконується вхід...', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/home/projects';  // Сторінка з проєктами
+                    }, 1500);
+                } else {
+                    showMessage(data.message || 'Помилка підтвердження. Перевірте код.', 'danger');
+                }
+            } catch (error) {
+                showMessage('Помилка з\'єднання з сервером.', 'danger');
+            }
+        });
+
+        async function resendCode() {
+            const email = document.getElementById('email').value.trim();
+            if (!email) {
+                showMessage('Введіть email, на який надсилати код.', 'warning');
+                return;
+            }
+            // Припустимо, що є ендпоінт повторного надсилання, але за вашою специфікацією його немає.
+            // Можна використати повторну реєстрацію? Або просто надіслати новий запит на /register.
+            // Для простоти повідомимо, що функція в розробці.
+            showMessage('Функція повторного надсилання тимчасово недоступна. Будь ласка, перевірте папку "Спам".', 'info');
+        }
+
+        function showMessage(msg, type) {
+            messageDiv.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                                        ${msg}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                    </div>`;
+            setTimeout(() => {
+                const alert = messageDiv.querySelector('.alert');
+                if (alert) alert.classList.remove('show');
+            }, 5000);
+        }
+
+        document.getElementById('resendLink').addEventListener('click', (e) => {
+            e.preventDefault();
+            resendCode();
+        });
+    </script>
+}

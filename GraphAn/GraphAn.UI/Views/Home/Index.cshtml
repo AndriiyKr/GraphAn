@@ -1,8 +1,68 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "GraphAn - Візуальне моделювання графів";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <h1 class="display-4 fw-bold">GraphAn</h1>
+            <p class="lead">Візуальне моделювання та аналіз графів онлайн</p>
+            <hr class="my-4" />
+
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <div class="alert alert-success">
+                    <strong>Ласкаво просимо, @User.Identity.Name!</strong>
+                </div>
+                <a href="/home/projects" class="btn btn-primary btn-lg">Перейти до моїх проєктів</a>
+                <button id="logoutBtn" class="btn btn-outline-secondary btn-lg ms-2">Вийти</button>
+                <form id="logoutForm" action="/api/auth/logout" method="post" class="d-none"></form>
+            }
+            else
+            {
+                <div class="d-grid gap-3 d-sm-flex justify-content-sm-center">
+                    <a href="/home/login" class="btn btn-primary btn-lg px-4 gap-3">Увійти</a>
+                    <a href="/home/register" class="btn btn-outline-secondary btn-lg px-4">Зареєструватися</a>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <h5 class="card-title">📊 Редактор графів</h5>
+                    <p class="card-text">Створюйте та редагуйте орієнтовані/неорієнтовані графи зі зручним drag&drop.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <h5 class="card-title">⚙️ Алгоритми аналізу</h5>
+                    <p class="card-text">Дейкстра, Флойд-Воршел, BFS, DFS, хроматичне число, пошук циклів та інше.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <h5 class="card-title">💾 Збереження</h5>
+                    <p class="card-text">Автоматичне збереження проєктів у хмарі. Доступ з будь-якого пристрою.</p>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+@section Scripts {
+    <script>
+        // Додатковий скрипт для виходу через POST
+        document.getElementById('logoutForm')?.addEventListener('submit', function(e) {
+            fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' })
+                .then(() => window.location.href = '/');
+            e.preventDefault();
+        });
+    </script>
+}

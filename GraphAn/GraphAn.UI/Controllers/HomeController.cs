@@ -4,6 +4,9 @@
 
 namespace GraphAn.Controllers
 {
+    using System.Security.Claims;
+    using GraphAn.BLL.Interfaces;
+    using GraphAn.UI.ViewModels;
     using Microsoft.AspNetCore.Mvc;
 
     /// <summary>
@@ -12,14 +15,17 @@ namespace GraphAn.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> logger;
+        private readonly IProjectService projectService;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HomeController"/> class.
         /// </summary>
         /// <param name="logger">Об'єкт логера.</param>
-        public HomeController(ILogger<HomeController> logger)
+        /// <param name="projectService">Сервіс для роботи з проєктами.</param>
+        public HomeController(ILogger<HomeController> logger, IProjectService projectService)
         {
             this.logger = logger;
+            this.projectService = projectService;
         }
 
         /// <summary>
@@ -96,11 +102,44 @@ namespace GraphAn.Controllers
         /// Відображає сторінку редактора проекту.
         /// </summary>
         /// <param name="id">Ідентифікатор проекту.</param>
-        /// <returns><see cref="ViewResult"/> зі сторінкою редактора проекту.</returns>
-        [HttpGet]
-        public IActionResult Project(Guid id)
+        /// <returns>
+        /// <see cref="ViewResult"/> зі сторінкою редактора проекту,
+        /// або <see cref="RedirectResult"/> на сторінку логіну, якщо користувач не авторизований,
+        /// або <see cref="NotFoundResult"/> якщо проект не знайдено.
+        /// </returns>
+        public async Task<IActionResult> Project(Guid id)
         {
-            this.logger.LogInformation("Відкрито сторінку редактора проєкту: {Id}", id);
+            // Отримуємо ідентифікатор поточного користувача з Claims
+            var userIdClaim = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null || !Guid.TryParse(userIdClaim, out var userId))
+            {
+                return this.RedirectToAction("Login", "Home");
+            }
+
+            // Викликаємо сервіс для отримання проєкту
+            var result = await this.projectService.GetProjectAsync(userId, id);
+            if (!result.Success || result.Project == null)
+            {
+                return this.NotFound();
+            }
+
+            var viewModel = new ProjectViewModel
+            {
+                ProjectId = result.Project.Id,
+                Name = result.Project.Name,
+                GraphData = result.Project.GraphData,
+            };
+
+            return this.View(viewModel);
+        }
+
+        /// <summary>
+        /// Відображає сторінку політики конфіденційності.
+        /// </summary>
+        /// <returns><see cref="ViewResult"/> зі сторінкою конфіденційності.</returns>
+        [HttpGet]
+        public IActionResult Privacy()
+        {
             return this.View();
         }
     }

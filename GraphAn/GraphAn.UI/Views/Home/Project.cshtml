@@ -1,0 +1,466 @@
+﻿@model GraphAn.UI.ViewModels.ProjectViewModel
+@{
+    ViewData["Title"] = Model?.Name ?? "Редактор графа";
+    var projectId = Model?.ProjectId ?? Guid.Empty;
+    var initialGraphJson = Model?.GraphData ?? "{}";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Бокова панель інструментів -->
+        <div class="col-md-3 col-lg-2 bg-light p-3" style="height: 100vh; overflow-y: auto;">
+            <div class="mb-3">
+                <label class="form-label">Назва проєкту</label>
+                <input type="text" id="projectName" class="form-control" value="@Model?.Name" />
+            </div>
+            <h5>Інструменти</h5>
+            <div class="d-grid gap-2">
+                <button id="addNodeBtn" class="btn btn-sm btn-primary">➕ Додати вершину</button>
+                <button id="addEdgeBtn" class="btn btn-sm btn-success">🔗 Додати ребро</button>
+                <button id="directedToggle" class="btn btn-sm btn-outline-secondary">↔️ Неорієнтований</button>
+                <button id="deleteModeBtn" class="btn btn-sm btn-danger">🗑️ Видалити елемент</button>
+                <button id="clearCanvasBtn" class="btn btn-sm btn-warning">🧹 Очистити полотно</button>
+                <hr />
+                <button id="metricsBtn" class="btn btn-sm btn-info">📊 Метрики</button>
+                <button id="cycleBtn" class="btn btn-sm btn-info">🔄 Найкоротший цикл</button>
+                <button id="chromaticBtn" class="btn btn-sm btn-info">🎨 Хроматичне число</button>
+                <button id="dfsBtn" class="btn btn-sm btn-info">🌲 DFS</button>
+                <button id="bfsBtn" class="btn btn-sm btn-info">🌿 BFS</button>
+                <button id="dijkstraBtn" class="btn btn-sm btn-info">🚀 Дейкстра</button>
+                <button id="floydBtn" class="btn btn-sm btn-info">🔍 Флойд-Воршел</button>
+                <hr />
+                <button id="saveBtn" class="btn btn-sm btn-success">💾 Зберегти</button>
+                <button id="exportBtn" class="btn btn-sm btn-secondary">📄 Експорт JSON</button>
+            </div>
+        </div>
+
+        <!-- Полотно графа -->
+        <div class="col-md-9 col-lg-10 p-0">
+            <canvas id="graphCanvas" style="width: 100%; height: calc(100vh - 20px); background: #f9f9f9; border: 1px solid #ccc;"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Модальне вікно для ваги ребра -->
+<div class="modal fade" id="weightModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Вага ребра</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="number" id="edgeWeight" class="form-control" step="any" value="1.0">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button>
+                <button type="button" id="weightSaveBtn" class="btn btn-primary">Зберегти</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальне вікно для вибору вершин (Дейкстра) -->
+<div class="modal fade" id="vertexSelectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Виберіть вершини</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-2">
+                    <label>Початкова вершина</label>
+                    <select id="startVertex" class="form-select"></select>
+                </div>
+                <div class="mb-2">
+                    <label>Кінцева вершина</label>
+                    <select id="endVertex" class="form-select"></select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button>
+                <button type="button" id="vertexSelectConfirm" class="btn btn-primary">Виконати</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Панель результатів -->
+<div id="resultPanel" style="position: fixed; right: 0; top: 60px; width: 350px; background: white; border-left: 1px solid #ccc; padding: 10px; display: none; z-index: 1000; max-height: 80vh; overflow-y: auto;">
+    <h5>Результати</h5>
+    <div id="resultContent"></div>
+    <button id="closeResultBtn" class="btn btn-sm btn-secondary mt-2">Закрити</button>
+</div>
+
+@section Scripts {
+    <script>
+        // ----- Глобальні змінні -----
+        let graph = { nodes: [], edges: [], directed: false };
+        let nextNodeId = 1, nextEdgeId = 1;
+        let canvas, ctx;
+        let projectId = '@projectId';
+        let initialData = JSON.parse(@Html.Raw(Json.Serialize(initialGraphJson)));
+        if (typeof initialData === 'string') initialData = JSON.parse(initialData);
+
+        let selectedNode = null, dragOffset = { x: 0, y: 0 }, isDragging = false;
+        let addEdgeMode = false, deleteMode = false, startEdgeNode = null;
+        let pendingEdge = null;
+
+        // ----- Ініціалізація -----
+        function initCanvas() {
+            canvas = document.getElementById('graphCanvas');
+            if (!canvas) return;
+            ctx = canvas.getContext('2d');
+            resizeCanvas();
+            window.addEventListener('resize', () => { resizeCanvas(); draw(); });
+            canvas.addEventListener('mousedown', onMouseDown);
+            canvas.addEventListener('mousemove', onMouseMove);
+            canvas.addEventListener('mouseup', onMouseUp);
+        }
+
+        function resizeCanvas() {
+            if (!canvas) return;
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+        }
+
+        // ----- Завантаження даних -----
+        function loadGraphFromJson(data) {
+            graph.nodes = data.nodes || [];
+            graph.edges = data.edges || [];
+            graph.directed = data.directed || false;
+            updateDirectedButton();
+            if (graph.nodes.length) {
+                const maxNode = Math.max(...graph.nodes.map(n => parseInt(n.id) || 0), 0);
+                nextNodeId = maxNode + 1;
+            }
+            if (graph.edges.length) {
+                const maxEdge = Math.max(...graph.edges.map(e => parseInt(e.id) || 0), 0);
+                nextEdgeId = maxEdge + 1;
+            }
+            if (graph.nodes.length === 0) {
+                addNode(canvas.width / 2 - 50, canvas.height / 2);
+                addNode(canvas.width / 2 + 50, canvas.height / 2);
+                addEdge('1', '2', 2);
+            } else {
+                for (let n of graph.nodes) {
+                    if (n.x === undefined) n.x = 100 + Math.random() * (canvas.width - 200);
+                    if (n.y === undefined) n.y = 100 + Math.random() * (canvas.height - 200);
+                }
+            }
+            draw();
+        }
+
+        // ----- Робота з вершинами/ребрами -----
+        function addNode(x, y) {
+            const id = (nextNodeId++).toString();
+            const label = 'v' + id;
+            graph.nodes.push({ id, label, x, y });
+            draw();
+        }
+
+        function deleteNode(nodeId) {
+            graph.nodes = graph.nodes.filter(n => n.id !== nodeId);
+            graph.edges = graph.edges.filter(e => e.from !== nodeId && e.to !== nodeId);
+            draw();
+        }
+
+        function addEdge(fromId, toId, weight) {
+            const id = (nextEdgeId++).toString();
+            graph.edges.push({ id, from: fromId, to: toId, weight: weight || 1 });
+            draw();
+        }
+
+        function deleteEdge(edgeId) {
+            graph.edges = graph.edges.filter(e => e.id !== edgeId);
+            draw();
+        }
+
+        // ----- Малювання -----
+        function draw() {
+            if (!ctx) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            graph.edges.forEach(edge => {
+                const fromNode = graph.nodes.find(n => n.id === edge.from);
+                const toNode = graph.nodes.find(n => n.id === edge.to);
+                if (!fromNode || !toNode) return;
+                ctx.beginPath();
+                ctx.moveTo(fromNode.x, fromNode.y);
+                ctx.lineTo(toNode.x, toNode.y);
+                ctx.strokeStyle = edge.highlight ? 'red' : (graph.directed ? '#007bff' : '#333');
+                ctx.lineWidth = edge.highlight ? 3 : 2;
+                ctx.stroke();
+                if (graph.directed) drawArrow(fromNode, toNode);
+                const midX = (fromNode.x + toNode.x) / 2;
+                const midY = (fromNode.y + toNode.y) / 2;
+                ctx.fillStyle = '#000';
+                ctx.font = '12px Arial';
+                ctx.fillText(edge.weight, midX, midY - 5);
+            });
+            graph.nodes.forEach(n => {
+                ctx.beginPath();
+                ctx.arc(n.x, n.y, 20, 0, 2 * Math.PI);
+                ctx.fillStyle = n.highlight ? '#ffc107' : '#4CAF50';
+                ctx.fill();
+                ctx.strokeStyle = '#000';
+                ctx.stroke();
+                ctx.fillStyle = '#fff';
+                ctx.font = '14px Arial';
+                ctx.fillText(n.label, n.x - 12, n.y + 5);
+            });
+        }
+
+        function drawArrow(from, to) {
+            const angle = Math.atan2(to.y - from.y, to.x - from.x);
+            const arrowSize = 10;
+            const x = to.x - 20 * Math.cos(angle);
+            const y = to.y - 20 * Math.sin(angle);
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x - arrowSize * Math.cos(angle - Math.PI / 6), y - arrowSize * Math.sin(angle - Math.PI / 6));
+            ctx.lineTo(x - arrowSize * Math.cos(angle + Math.PI / 6), y - arrowSize * Math.sin(angle + Math.PI / 6));
+            ctx.fillStyle = graph.directed ? '#007bff' : '#333';
+            ctx.fill();
+        }
+
+        // ----- Геометрія -----
+        function getMousePos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            return {
+                x: (e.clientX - rect.left) * scaleX,
+                y: (e.clientY - rect.top) * scaleY
+            };
+        }
+
+        function findEdgeNear(x, y) {
+            for (let edge of graph.edges) {
+                const from = graph.nodes.find(n => n.id === edge.from);
+                const to = graph.nodes.find(n => n.id === edge.to);
+                if (!from || !to) continue;
+                const dist = pointToLineDistance(x, y, from.x, from.y, to.x, to.y);
+                if (dist < 8) return edge;
+            }
+            return null;
+        }
+
+        function pointToLineDistance(px, py, ax, ay, bx, by) {
+            const A = px - ax, B = py - ay;
+            const C = bx - ax, D = by - ay;
+            const dot = A * C + B * D;
+            const len2 = C * C + D * D;
+            if (len2 === 0) return Math.hypot(px - ax, py - ay);
+            let t = dot / len2;
+            t = Math.max(0, Math.min(1, t));
+            const projX = ax + t * C;
+            const projY = ay + t * D;
+            return Math.hypot(px - projX, py - projY);
+        }
+
+        // ----- Обробники миші -----
+        function onMouseDown(e) {
+            const { x, y } = getMousePos(e);
+            if (deleteMode) {
+                const node = graph.nodes.find(n => Math.hypot(n.x - x, n.y - y) < 20);
+                if (node) { deleteNode(node.id); return; }
+                const edge = findEdgeNear(x, y);
+                if (edge) { deleteEdge(edge.id); return; }
+                return;
+            }
+            if (addEdgeMode) {
+                const node = graph.nodes.find(n => Math.hypot(n.x - x, n.y - y) < 20);
+                if (node) {
+                    if (startEdgeNode === null) {
+                        startEdgeNode = node;
+                    } else if (startEdgeNode.id !== node.id) {
+                        pendingEdge = { from: startEdgeNode.id, to: node.id };
+                        $('#weightModal').modal('show');
+                        startEdgeNode = null;
+                    } else {
+                        startEdgeNode = null;
+                    }
+                }
+                return;
+            }
+            const node = graph.nodes.find(n => Math.hypot(n.x - x, n.y - y) < 20);
+            if (node) {
+                isDragging = true;
+                selectedNode = node;
+                dragOffset.x = node.x - x;
+                dragOffset.y = node.y - y;
+                canvas.style.cursor = 'grabbing';
+                e.preventDefault();
+            }
+        }
+
+        function onMouseMove(e) {
+            if (isDragging && selectedNode) {
+                const { x, y } = getMousePos(e);
+                selectedNode.x = x + dragOffset.x;
+                selectedNode.y = y + dragOffset.y;
+                draw();
+            }
+        }
+
+        function onMouseUp() {
+            isDragging = false;
+            selectedNode = null;
+            canvas.style.cursor = 'default';
+        }
+
+        // ----- Збереження та API -----
+        async function saveProject() {
+            const name = document.getElementById('projectName').value.trim() || "Без назви";
+            const graphData = JSON.stringify({
+                nodes: graph.nodes.map(n => ({ id: n.id, label: n.label, x: n.x, y: n.y })),
+                edges: graph.edges.map(e => ({ id: e.id, from: e.from, to: e.to, weight: e.weight })),
+                directed: graph.directed
+            });
+            const response = await fetch('/api/project/save', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ projectId, name, graphData })
+            });
+            if (response.ok) {
+                alert('Проєкт збережено');
+                document.title = name;
+            } else {
+                const error = await response.json();
+                alert('Помилка: ' + (error.message || 'Невідома помилка'));
+            }
+        }
+
+        async function runAlgorithm(endpoint, body) {
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                if (response.ok) {
+                    const result = await response.json();
+                    document.getElementById('resultContent').innerHTML = '<pre>' + JSON.stringify(result, null, 2) + '</pre>';
+                    document.getElementById('resultPanel').style.display = 'block';
+                } else {
+                    alert('Помилка виконання: ' + response.statusText);
+                }
+            } catch (err) {
+                alert('Помилка з\'єднання');
+            }
+        }
+
+        // ----- Налаштування кнопок -----
+        function updateDirectedButton() {
+            const btn = document.getElementById('directedToggle');
+            btn.innerText = graph.directed ? '🔁 Орієнтований' : '↔️ Неорієнтований';
+        }
+
+        const addNodeBtn = document.getElementById('addNodeBtn');
+        const addEdgeBtn = document.getElementById('addEdgeBtn');
+        const directedToggle = document.getElementById('directedToggle');
+        const deleteModeBtn = document.getElementById('deleteModeBtn');
+        const clearCanvasBtn = document.getElementById('clearCanvasBtn');
+        const saveBtn = document.getElementById('saveBtn');
+        const exportBtn = document.getElementById('exportBtn');
+        const closeResultBtn = document.getElementById('closeResultBtn');
+        const weightSaveBtn = document.getElementById('weightSaveBtn');
+        const metricsBtn = document.getElementById('metricsBtn');
+        const cycleBtn = document.getElementById('cycleBtn');
+        const chromaticBtn = document.getElementById('chromaticBtn');
+        const dfsBtn = document.getElementById('dfsBtn');
+        const bfsBtn = document.getElementById('bfsBtn');
+        const dijkstraBtn = document.getElementById('dijkstraBtn');
+        const floydBtn = document.getElementById('floydBtn');
+        const vertexSelectConfirm = document.getElementById('vertexSelectConfirm');
+
+        if (addNodeBtn) addNodeBtn.onclick = () => addNode(canvas.width/2, canvas.height/2);
+        if (addEdgeBtn) {
+            addEdgeBtn.onclick = function() {
+                addEdgeMode = !addEdgeMode;
+                startEdgeNode = null;
+                this.classList.toggle('active');
+                if (addEdgeMode && deleteMode) {
+                    deleteMode = false;
+                    if (deleteModeBtn) deleteModeBtn.classList.remove('active');
+                }
+            };
+        }
+        if (directedToggle) directedToggle.onclick = () => { graph.directed = !graph.directed; updateDirectedButton(); draw(); };
+        if (deleteModeBtn) {
+            deleteModeBtn.onclick = function() {
+                deleteMode = !deleteMode;
+                this.classList.toggle('active');
+                if (deleteMode && addEdgeMode) {
+                    addEdgeMode = false;
+                    if (addEdgeBtn) addEdgeBtn.classList.remove('active');
+                }
+            };
+        }
+        if (clearCanvasBtn) clearCanvasBtn.onclick = () => { if(confirm('Очистити все?')) { graph.nodes = []; graph.edges = []; nextNodeId = 1; nextEdgeId = 1; draw(); } };
+        if (saveBtn) saveBtn.onclick = saveProject;
+        if (exportBtn) exportBtn.onclick = () => console.log(JSON.stringify(graph, null, 2));
+        if (closeResultBtn) closeResultBtn.onclick = () => document.getElementById('resultPanel').style.display = 'none';
+        if (weightSaveBtn) {
+            weightSaveBtn.onclick = () => {
+                const weight = parseFloat(document.getElementById('edgeWeight').value);
+                if (pendingEdge && !isNaN(weight)) {
+                    addEdge(pendingEdge.from, pendingEdge.to, weight);
+                    pendingEdge = null;
+                    $('#weightModal').modal('hide');
+                    // Вимкнути режим додавання ребер після успішного додавання
+                    if (addEdgeMode) {
+                        addEdgeMode = false;
+                        if (addEdgeBtn) addEdgeBtn.classList.remove('active');
+                    }
+                }
+            };
+        }
+        if (metricsBtn) metricsBtn.onclick = () => runAlgorithm('/api/analysis/metrics', { graphData: JSON.stringify(graph) });
+        if (cycleBtn) cycleBtn.onclick = () => runAlgorithm('/api/analysis/cycle-chromatic', { graphData: JSON.stringify(graph) });
+        if (chromaticBtn) chromaticBtn.onclick = () => runAlgorithm('/api/analysis/cycle-chromatic', { graphData: JSON.stringify(graph) });
+        if (dfsBtn) {
+            dfsBtn.onclick = () => {
+                if (graph.nodes.length) runAlgorithm('/api/analysis/dfs', { graphData: JSON.stringify(graph), startId: graph.nodes[0].id });
+                else alert('Немає вершин');
+            };
+        }
+        if (bfsBtn) {
+            bfsBtn.onclick = () => {
+                if (graph.nodes.length) runAlgorithm('/api/analysis/bfs', { graphData: JSON.stringify(graph), startId: graph.nodes[0].id });
+                else alert('Немає вершин');
+            };
+        }
+        if (dijkstraBtn) {
+            dijkstraBtn.onclick = () => {
+                if (graph.nodes.length < 2) alert('Потрібно хоча б дві вершини');
+                else {
+                    const select = document.getElementById('startVertex');
+                    if (select) {
+                        select.innerHTML = graph.nodes.map(n => `<option value="${n.id}">${n.label}</option>`).join('');
+                        document.getElementById('endVertex').innerHTML = select.innerHTML;
+                        $('#vertexSelectModal').modal('show');
+                        window.dijkstraCallback = () => {
+                            const start = document.getElementById('startVertex').value;
+                            const end = document.getElementById('endVertex').value;
+                            runAlgorithm('/api/analysis/dijkstra', { graphData: JSON.stringify(graph), startId: start, endId: end });
+                        };
+                    }
+                }
+            };
+        }
+        if (vertexSelectConfirm) {
+            vertexSelectConfirm.onclick = () => {
+                $('#vertexSelectModal').modal('hide');
+                if (window.dijkstraCallback) window.dijkstraCallback();
+            };
+        }
+
+        // ----- Старт -----
+        initCanvas();
+        if (initialData && (initialData.nodes || initialData.edges)) loadGraphFromJson(initialData);
+        else loadGraphFromJson({ nodes: [], edges: [], directed: false });
+    </script>
+}

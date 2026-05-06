@@ -1,0 +1,136 @@
+﻿@{
+    ViewData["Title"] = "Мої проєкти";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Мої проєкти</h1>
+        <button id="createProjectBtn" class="btn btn-primary">➕ Створити новий проєкт</button>
+    </div>
+
+    <div id="projectsGrid" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        <div class="col text-center" id="loadingSpinner">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Завантаження...</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальне вікно створення проєкту -->
+<div class="modal fade" id="createModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Новий проєкт</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="projectName" class="form-control" placeholder="Назва проєкту (необов'язково)">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button>
+                <button type="button" id="confirmCreateBtn" class="btn btn-primary">Створити</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const projectsGrid = document.getElementById('projectsGrid');
+        let projects = [];
+
+        async function loadProjects() {
+            try {
+                const response = await fetch('/api/project/list', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                if (!response.ok) throw new Error('Не вдалося завантажити проєкти');
+                const data = await response.json();
+                projects = data.projects || [];
+                renderProjects();
+            } catch (error) {
+                projectsGrid.innerHTML = `<div class="col-12 text-center text-danger">Помилка завантаження: ${error.message}</div>`;
+            }
+        }
+
+        function renderProjects() {
+            if (!projects.length) {
+                projectsGrid.innerHTML = `<div class="col-12 text-center"><p>У вас ще немає проєктів. Створіть перший!</p></div>`;
+                return;
+            }
+            let html = '';
+            for (let p of projects) {
+                const createdAt = new Date(p.createdAt).toLocaleDateString();
+                const updatedAt = new Date(p.updatedAt).toLocaleDateString();
+                html += `
+                    <div class="col">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title">${escapeHtml(p.name)}</h5>
+                                <p class="card-text small text-muted">
+                                    Створено: ${createdAt}<br>
+                                    Оновлено: ${updatedAt}
+                                </p>
+                            </div>
+                            <div class="card-footer bg-transparent d-flex justify-content-between">
+                                <a href="/home/project/${p.projectId}" class="btn btn-sm btn-outline-primary">Відкрити</a>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteProject('${p.projectId}')">Видалити</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            projectsGrid.innerHTML = html;
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+
+        document.getElementById('createProjectBtn').addEventListener('click', () => {
+            document.getElementById('projectName').value = '';
+            $('#createModal').modal('show');
+        });
+
+        document.getElementById('confirmCreateBtn').addEventListener('click', async () => {
+            const name = document.getElementById('projectName').value.trim();
+            const response = await fetch('/api/project/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: name || null })
+            });
+            if (response.ok) {
+                const data = await response.json();
+                $('#createModal').modal('hide');
+                window.location.href = `/home/project/${data.projectId}`;
+            } else {
+                const error = await response.json();
+                alert('Помилка створення: ' + (error.message || 'Невідома помилка'));
+            }
+        });
+
+        window.deleteProject = async function(projectId) {
+            if (!confirm('Ви дійсно хочете видалити цей проєкт?')) return;
+            const response = await fetch(`/api/project/${projectId}`, {
+                method: 'DELETE'
+            });
+            if (response.ok) {
+                loadProjects();
+            } else {
+                const error = await response.json();
+                alert('Помилка видалення: ' + (error.message || 'Невідома помилка'));
+            }
+        };
+
+        loadProjects();
+    </script>
+}

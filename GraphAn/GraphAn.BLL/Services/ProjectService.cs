@@ -58,7 +58,6 @@ namespace GraphAn.BLL.Services
                 Id = Guid.NewGuid(),
                 UserId = userId,
                 Name = name,
-                GraphData = string.Empty,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
             };

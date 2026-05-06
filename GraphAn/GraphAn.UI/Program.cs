@@ -9,7 +9,9 @@ namespace GraphAn.UI
     using GraphAn.BLL.Interfaces;
     using GraphAn.BLL.Services;
     using GraphAn.DAL.Context;
+    using GraphAn.DAL.Models;
     using GraphAn.DAL.Repositories;
+    using Microsoft.AspNetCore.Identity;
     using Microsoft.EntityFrameworkCore;
     using Serilog;
 
@@ -53,6 +55,44 @@ namespace GraphAn.UI
 
                 // Add services to the container.
                 builder.Services.AddControllersWithViews();
+
+                // 1. Додаємо Identity з нашою моделлю User та роллю IdentityRole<Guid>
+                builder.Services.AddIdentity<User, IdentityRole<Guid>>(options =>
+                {
+                    // Налаштування паролів (можна залишити стандартні або задати свої)
+                    options.Password.RequireDigit = true;
+                    options.Password.RequiredLength = 6;
+                    options.Password.RequireNonAlphanumeric = false;
+                    options.Password.RequireUppercase = false;
+                    options.Password.RequireLowercase = false;
+
+                    // Налаштування блокування (lockout)
+                    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+                    options.Lockout.MaxFailedAccessAttempts = 5;
+
+                    // Підтвердження email (можна увімкнути пізніше)
+                    options.SignIn.RequireConfirmedEmail = false;
+
+                    // Ім'я користувача – email не обов'язково співпадає
+                    options.User.RequireUniqueEmail = true;
+                })
+                .AddEntityFrameworkStores<AppDbContext>() // використовуємо наш DbContext
+                .AddDefaultTokenProviders();                 // для скидання пароля, підтвердження email
+
+                // 2. Налаштовуємо cookie-автентифікацію (вона використовується за замовчуванням)
+                builder.Services.ConfigureApplicationCookie(options =>
+                {
+                    options.Cookie.HttpOnly = true;
+                    options.ExpireTimeSpan = TimeSpan.FromDays(14);
+                    options.LoginPath = "/Account/Login";          // шлях до сторінки входу
+                    options.LogoutPath = "/Account/Logout";
+                    options.AccessDeniedPath = "/Account/AccessDenied";
+                    options.SlidingExpiration = true;
+                });
+
+                // 3. Якщо ви хочете використовувати авторизацію через куки явно, можна додати:
+                builder.Services.AddAuthentication();
+                builder.Services.AddAuthorization();
 
                 // Configure AppDbContext using CONNECTION_STRING from environment or configuration
                 var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING")

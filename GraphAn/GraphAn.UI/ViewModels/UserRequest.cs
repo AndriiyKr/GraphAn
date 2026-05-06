@@ -17,7 +17,7 @@ namespace GraphAn.UI.ViewModels
         /// <summary>
         /// Отримує або задає ім'я користувача.
         /// </summary>
-        public string Username { get; set; } = string.Empty;
+        public string UserName { get; set; } = string.Empty;
 
         /// <summary>
         /// Отримує або задає пароль користувача.

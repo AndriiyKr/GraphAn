@@ -39,7 +39,7 @@ namespace GraphAn.DAL.Repositories
         /// <returns> <see cref="User"/> якщо знайдено; інакше <see langword="null"/>.</returns>
         public async Task<User?> GetByUsernameAsync(string username)
         {
-            return await this.DbSet.FirstOrDefaultAsync(u => u.Username == username);
+            return await this.DbSet.FirstOrDefaultAsync(u => u.UserName == username);
         }
 
         /// <summary>

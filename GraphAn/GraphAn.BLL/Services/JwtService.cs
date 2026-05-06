@@ -46,8 +46,8 @@ namespace GraphAn.BLL.Services
             var claims = new[]
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Name, user.Username),
+                new Claim(ClaimTypes.Email, user.Email!),
+                new Claim(ClaimTypes.Name, user.UserName!),
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));

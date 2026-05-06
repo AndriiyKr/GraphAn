@@ -40,7 +40,7 @@ namespace GraphAn.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> StartRegister([FromBody] UserRequest request)
         {
-            var result = await this.emailService.StartRegistrationAsync(request.Email, request.Password, request.Username);
+            var result = await this.emailService.StartRegistrationAsync(request.Email, request.Password, request.UserName);
 
             if (!result.Success)
             {
@@ -82,7 +82,7 @@ namespace GraphAn.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] UserRequest request)
         {
-            var result = await this.emailService.UserLoginAsync(request.Email, request.Password, request.Username);
+            var result = await this.emailService.UserLoginAsync(request.Email, request.Password, request.UserName);
 
             if (!result.Success)
             {
@@ -94,8 +94,8 @@ namespace GraphAn.Controllers
             return this.Ok(new LoginResponse
             {
                 UserId = result.User!.Id,
-                Username = result.User!.Username,
-                Email = result.User!.Email,
+                UserName = result.User!.UserName!,
+                Email = result.User!.Email!,
                 Token = token,
             });
         }

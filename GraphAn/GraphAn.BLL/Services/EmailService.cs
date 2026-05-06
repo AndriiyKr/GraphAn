@@ -22,7 +22,7 @@ namespace GraphAn.BLL.Services
     {
         private static readonly User SystemUser = new ()
         {
-            Username = "system",
+            UserName = "system",
             Email = "system@local",
             PasswordHash = string.Empty,
         };
@@ -165,7 +165,7 @@ namespace GraphAn.BLL.Services
             {
                 Id = Guid.NewGuid(),
                 Email = email!,
-                Username = registration.TempUsername ?? "Anonymous user",
+                UserName = registration.TempUsername ?? "Anonymous user",
                 PasswordHash = registration.TempPasswordHash,
             };
 
@@ -287,7 +287,7 @@ namespace GraphAn.BLL.Services
         private bool CheckIfPasswordCorrect(User user, string password)
         {
             var hasher = new PasswordHasher<User>();
-            var verificationResult = hasher.VerifyHashedPassword(user, user.PasswordHash, password!);
+            var verificationResult = hasher.VerifyHashedPassword(user, user.PasswordHash!, password!);
             if (verificationResult == PasswordVerificationResult.Failed)
             {
                 return false;

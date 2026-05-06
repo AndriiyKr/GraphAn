@@ -150,7 +150,7 @@ namespace GraphAn.Controllers
             {
                 ProjectId = result.Project!.Id,
                 Name = result.Project!.Name,
-                GraphData = result.Project!.GraphData,
+                GraphData = result.Project!.GraphData!,
                 CreatedAt = result.Project!.CreatedAt,
                 UpdatedAt = result.Project!.UpdatedAt,
             });

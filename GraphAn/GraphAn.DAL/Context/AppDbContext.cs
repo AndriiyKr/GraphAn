@@ -4,26 +4,25 @@
 
 namespace GraphAn.DAL.Context
 {
-    using System;
     using DotNetEnv;
     using GraphAn.DAL.Models;
+    using Microsoft.AspNetCore.Identity;
+    using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Logging;
 
     /// <summary>
     /// Основний контекст бази даних додатка для взаємодії з PostgreSQL через Entity Framework Core.
-    /// Забезпечує керування підключенням, транзакціями та мапінг об'єктів на таблиці БД.
     /// </summary>
-    public class AppDbContext : DbContext
+    public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
     {
         /// <summary>
-        /// Статичне поле для кешування рядка підключення, щоб уникнути повторного зчитування
-        ///  конфігураційних файлів при кожному створенні екземпляра контексту.
+        /// Статичне поле для кешування рядка підключення.
         /// </summary>
         private static string? cachedConnection;
 
         /// <summary>
-        /// Логер для запису подій, що відбуваються всередині шару доступу до даних (SQL-запити, помилки БД).
+        /// Логер для запису подій всередині шару доступу до даних.
         /// </summary>
         private readonly ILogger<AppDbContext>? logger;
 
@@ -32,8 +31,8 @@ namespace GraphAn.DAL.Context
         /// Конструктор для використання в системі Dependency Injection.
         /// Автоматично отримує налаштовані параметри контексту та сервіс логування.
         /// </summary>
-        /// <param name="logger">Сервіс логування для запису операцій контексту.</param>
-        /// <param name="options">Налаштування конфігурації DbContext (провайдер БД, рядок підключення тощо).</param>
+        /// <param name="logger">Сервіс логування.</param>
+        /// <param name="options">Налаштування конфігурації DbContext.</param>
         public AppDbContext(ILogger<AppDbContext> logger, DbContextOptions<AppDbContext> options)
             : base(options)
         {
@@ -42,7 +41,6 @@ namespace GraphAn.DAL.Context
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AppDbContext"/> class.
-        /// Спрощений конструктор для ініціалізації контексту з параметрами, але без сервісу логування.
         /// </summary>
         /// <param name="options">Налаштування конфігурації DbContext.</param>
         public AppDbContext(DbContextOptions<AppDbContext> options)
@@ -52,16 +50,10 @@ namespace GraphAn.DAL.Context
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AppDbContext"/> class.
-        /// Конструктор без параметрів.
         /// </summary>
         public AppDbContext()
         {
         }
-
-        /// <summary>
-        /// Gets or sets набір користувачів. Added DbSet properties for EF Core.
-        /// </summary>
-        public DbSet<User> Users { get; set; } = null!;
 
         /// <summary>
         /// Gets or sets набір проєктів.
@@ -110,22 +102,51 @@ namespace GraphAn.DAL.Context
         {
             base.OnModelCreating(modelBuilder);
 
-            // Налаштування сутності User
+            modelBuilder.Entity<User>().ToTable("users");
+            modelBuilder.Entity<IdentityRole<Guid>>().ToTable("roles");
+            modelBuilder.Entity<IdentityUserRole<Guid>>().ToTable("user_roles");
+            modelBuilder.Entity<IdentityUserClaim<Guid>>().ToTable("user_claims");
+            modelBuilder.Entity<IdentityUserLogin<Guid>>().ToTable("user_logins");
+            modelBuilder.Entity<IdentityUserToken<Guid>>().ToTable("user_tokens");
+            modelBuilder.Entity<IdentityRoleClaim<Guid>>().ToTable("role_claims");
+
             modelBuilder.Entity<User>(entity =>
             {
-                // Робимо Email унікальним
-                entity.HasIndex(u => u.Email)
-                    .IsUnique();
+                // Первинний ключ
+                entity.Property(u => u.Id).HasColumnName("id");
 
-                // Зв'язок між User і Project (один-до-багатьох)
+                // Унікальне ім'я
+                entity.Property(u => u.UserName).HasColumnName("username");
+                entity.HasIndex(u => u.NormalizedUserName).HasDatabaseName("ix_users_normalized_username");
+
+                // Email
+                entity.Property(u => u.Email).HasColumnName("email");
+                entity.HasIndex(u => u.NormalizedEmail).HasDatabaseName("ix_users_normalized_email");
+
+                // Інші поля Identity
+                entity.Property(u => u.NormalizedUserName).HasColumnName("normalized_username");
+                entity.Property(u => u.NormalizedEmail).HasColumnName("normalized_email");
+                entity.Property(u => u.EmailConfirmed).HasColumnName("email_confirmed");
+                entity.Property(u => u.PasswordHash).HasColumnName("password_hash");
+                entity.Property(u => u.SecurityStamp).HasColumnName("security_stamp");
+                entity.Property(u => u.ConcurrencyStamp).HasColumnName("concurrency_stamp");
+                entity.Property(u => u.PhoneNumber).HasColumnName("phone_number");
+                entity.Property(u => u.PhoneNumberConfirmed).HasColumnName("phone_number_confirmed");
+                entity.Property(u => u.TwoFactorEnabled).HasColumnName("two_factor_enabled");
+                entity.Property(u => u.LockoutEnd).HasColumnName("lockout_end");
+                entity.Property(u => u.LockoutEnabled).HasColumnName("lockout_enabled");
+                entity.Property(u => u.AccessFailedCount).HasColumnName("access_failed_count");
+
+                // Користувацьке поле
+                entity.Property(u => u.CreatedAt).HasColumnName("created_at");
+
+                // Зв'язок з проектами
                 entity.HasMany(u => u.Projects)
                     .WithOne(p => p.User)
                     .HasForeignKey(p => p.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // Мапінг назв таблиць на малі літери
-            modelBuilder.Entity<User>().ToTable("users");
             modelBuilder.Entity<Project>().ToTable("projects");
             modelBuilder.Entity<Registration>().ToTable("registrations");
         }

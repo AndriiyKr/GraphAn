@@ -6,14 +6,12 @@ namespace GraphAn.DAL.Models
 {
     using System;
     using System.Collections.Generic;
-    using System.ComponentModel.DataAnnotations;
-    using System.ComponentModel.DataAnnotations.Schema;
+    using Microsoft.AspNetCore.Identity;
 
     /// <summary>
     /// Представляє користувача системи.
     /// </summary>
-    [Table("users")]
-    public class User
+    public class User : IdentityUser<Guid>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="User"/> class.
@@ -24,37 +22,8 @@ namespace GraphAn.DAL.Models
         }
 
         /// <summary>
-        /// Отримує або задає унікальний ідентифікатор користувача.
-        /// </summary>
-        [Key]
-        [Column("id")]
-        public Guid Id { get; set; }
-
-        /// <summary>
-        /// Отримує або задає ім'я користувача.
-        /// </summary>
-        [Required]
-        [Column("username")]
-        required public string Username { get; set; }
-
-        /// <summary>
-        /// Отримує або задає електронну пошту (унікальну).
-        /// </summary>
-        [Required]
-        [Column("email")]
-        required public string Email { get; set; }
-
-        /// <summary>
-        /// Отримує або задає хешований пароль.
-        /// </summary>
-        [Required]
-        [Column("password_hash")]
-        required public string PasswordHash { get; set; }
-
-        /// <summary>
         /// Отримує або задає дату створення акаунту.
         /// </summary>
-        [Column("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         /// <summary>

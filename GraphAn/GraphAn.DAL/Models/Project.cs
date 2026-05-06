@@ -38,7 +38,7 @@ namespace GraphAn.DAL.Models
         /// Отримує або задає дані графа у форматі JSON.
         /// </summary>
         [Column("graph_data", TypeName = "jsonb")]
-        public string? GraphData { get; set; }
+        public string GraphData { get; set; } = "{}";
 
         /// <summary>
         /// Отримує або задає час створення.

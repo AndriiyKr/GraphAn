@@ -67,6 +67,21 @@ namespace GraphAn.Controllers
         }
 
         /// <summary>
+        /// Відображає сторінку для скидання пароля.
+        /// </summary>
+        /// <param name="email">Електронна пошта користувача.</param>
+        /// <param name="token">Токен скидання пароля.</param>
+        /// <returns><see cref="ViewResult"/> зі сторінкою скидання пароля.</returns>
+        [HttpGet("reset-password")]
+        public IActionResult ResetPassword(string email, string token)
+        {
+            // Передати email і token у View через ViewBag або модель
+            this.ViewBag.Email = email;
+            this.ViewBag.Token = token;
+            return this.View();
+        }
+
+        /// <summary>
         /// Відображає сторінку зі списком проектів користувача.
         /// </summary>
         /// <returns><see cref="ViewResult"/> зі сторінкою списку проектів.</returns>

@@ -11,7 +11,6 @@ namespace GraphAn.BLL.Services
     using GraphAn.DAL.Repositories;
     using MailKit.Net.Smtp;
     using Microsoft.AspNetCore.Identity;
-    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Logging;
     using MimeKit;
 
@@ -30,6 +29,7 @@ namespace GraphAn.BLL.Services
         private readonly ILogger<EmailService> logger;
         private readonly UserRepository userRepository;
         private readonly RegistrationRepository registrationRepository;
+        private readonly UserManager<User> userManager;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="EmailService"/> class.
@@ -37,26 +37,20 @@ namespace GraphAn.BLL.Services
         /// <param name="logger">Об'єкт логера.</param>
         /// <param name="userRepository">Об'єкт репозиторію користувача.</param>
         /// <param name="registrationRepository">Об'єкт репозиторію реєстрації.</param>
+        /// <param name="userManager">Менеджер користувачів Identity.</param>
         public EmailService(
             ILogger<EmailService> logger,
             UserRepository userRepository,
-            RegistrationRepository registrationRepository)
+            RegistrationRepository registrationRepository,
+            UserManager<User> userManager)
         {
             this.logger = logger;
             this.userRepository = userRepository;
             this.registrationRepository = registrationRepository;
+            this.userManager = userManager;
         }
 
-        /// <summary>
-        /// Створити тимчасову реєсрацію з кодом для користувача.
-        /// </summary>
-        /// <param name="email">Електронна пошта користувача.</param>
-        /// <param name="password">Пароль.</param>
-        /// <param name="username">Назва користувача.</param>
-        /// <returns>
-        /// Кортеж, де <c>Success</c> — результат операції,
-        /// <c>Message</c> — опис результату або помилки.
-        /// </returns>
+        /// <inheritdoc/>
         public async Task<(bool Success, string Message)> StartRegistrationAsync(
             string? email,
             string password,
@@ -80,10 +74,21 @@ namespace GraphAn.BLL.Services
                 return (false, "Користувач з таким email уже існує");
             }
 
+            // Перевірка унікальності імені користувача через UserManager
+            if (!string.IsNullOrWhiteSpace(username))
+            {
+                var existingUserByUsername = await this.userManager.FindByNameAsync(username);
+                if (existingUserByUsername != null)
+                {
+                    this.logger.LogWarning("Користувач з таким іменем уже існує: {Username}", username);
+                    return (false, "Користувач з таким іменем вже існує");
+                }
+            }
+
             if (await this.registrationRepository.IfEmailExistsAsync(email!))
             {
                 this.logger.LogWarning("Користувач з таким email уже створив запит на реєстрацію: {Email}", email);
-                return (false, "Користувач з таким email уже існує уже створив запит на реєстрацію");
+                return (false, "Користувач з таким email уже створив запит на реєстрацію");
             }
 
             string verificationCode = this.GenerateCode();
@@ -101,26 +106,16 @@ namespace GraphAn.BLL.Services
             if (!sendResult)
             {
                 this.logger.LogWarning("Помилка надсилання коду користувачу: {Email}", email);
-
                 return (false, "Помилка надсилання коду.");
             }
 
             await this.registrationRepository.AddAsync(registration);
-
             this.logger.LogInformation("Тимчасовий запис реєстрації створено для користувача: {Email}", email);
 
             return (true, "Запис успішно створено. Код було відправлено на вашу пошту.");
         }
 
-        /// <summary>
-        /// Підтвердити реєстрацію з кодом від користувача.
-        /// </summary>
-        /// <param name="email">Електронна пошта користувача.</param>
-        /// <param name="code">Код.</param>
-        /// <returns>
-        /// Кортеж, де <c>Success</c> — результат операції,
-        /// <c>Message</c> — опис результату або помилки.
-        /// </returns>
+        /// <inheritdoc/>
         public async Task<(bool Success, string Message)> ConfirmRegistrationAsync(string? email, string? code)
         {
             if (this.IsEmailInvalid(email))
@@ -142,7 +137,6 @@ namespace GraphAn.BLL.Services
             }
 
             var registration = await this.registrationRepository.GetByEmailAsync(email!);
-
             if (registration == null)
             {
                 this.logger.LogWarning("Не знайдено реєстрації для підтвердження користувача: {Email}", email);
@@ -161,13 +155,21 @@ namespace GraphAn.BLL.Services
                 return (false, "Час для підтвердження реєстрації було вичерпано");
             }
 
-            User user = new User
+            var user = new User
             {
                 Id = Guid.NewGuid(),
                 Email = email!,
                 UserName = registration.TempUsername ?? "Anonymous user",
                 PasswordHash = registration.TempPasswordHash,
+                EmailConfirmed = true,
+                CreatedAt = DateTime.UtcNow,
+                SecurityStamp = Guid.NewGuid().ToString(),
+                ConcurrencyStamp = Guid.NewGuid().ToString(),
             };
+
+            // Нормалізація для Identity
+            user.NormalizedUserName = user.UserName.ToUpperInvariant();
+            user.NormalizedEmail = user.Email.ToUpperInvariant();
 
             await this.userRepository.AddAsync(user);
             await this.registrationRepository.DeleteAsync(registration);
@@ -176,107 +178,109 @@ namespace GraphAn.BLL.Services
             return (true, "Успішно зареєстровано");
         }
 
-        /// <summary>
-        /// Перевірка і знаходження користувача для входу у акаунт.</summary>
-        /// <param name="email">Електронна адреса користувача.</param>
-        /// <param name="password">Пароль.</param>
-        /// <param name="username">Ім'я користувача (необов'язково).</param>
-        /// <returns>
-        /// Кортеж, де <c>Success</c> — результат операції,
-        /// <c>Message</c> — опис результату або помилки.
-        /// <c>User</c> — об'єкт користувача при успіху.
-        /// </returns>
-        public async Task<(bool Success, string Message, User? User)> UserLoginAsync(
-            string? email,
-            string password,
-            string? username)
+        /// <inheritdoc/>
+        public async Task<(bool Success, string Message)> ForgotPasswordAsync(string email, Func<string, string, string> resetLinkGenerator)
         {
-            if (this.IsPasswordInvalid(password))
+            if (string.IsNullOrWhiteSpace(email) || !this.IsEmailValid(email))
             {
-                this.logger.LogWarning("Передано некоректний пароль при вході у акаунт");
-                return (false, "Некоректний пароль", null);
+                this.logger.LogWarning("Передано некоректний email для скидання пароля: {Email}", email);
+                return (false, "Некоректна електронна адреса.");
             }
 
-            if (email == null && username == null)
+            var user = await this.userManager.FindByEmailAsync(email);
+            if (user == null || !user.EmailConfirmed)
             {
-                this.logger.LogWarning("Не передано логіну при вході у акаунт");
-                return (false, "Некоректний логін", null);
+                this.logger.LogWarning("Спроба скидання пароля для неіснуючого або непідтвердженого email: {Email}", email);
+                return (true, "Якщо обліковий запис існує та email підтверджено, на нього надіслано лист з інструкціями.");
             }
 
-            User? user = null;
-            if (email != null)
+            var token = await this.userManager.GeneratePasswordResetTokenAsync(user);
+            var resetLink = resetLinkGenerator(user.Email!, token);
+
+            string bodyHtml = $"<p>Для скидання пароля перейдіть за посиланням: <a href='{resetLink}'>скинути пароль</a></p><p>Якщо ви не ініціювали скидання, проігноруйте цей лист.</p>";
+            var sendResult = await this.SendEmailAsync(
+                email,
+                "Відновлення пароля",
+                bodyHtml);
+            if (!sendResult)
             {
-                user = await this.userRepository.GetByEmailAsync(email);
+                this.logger.LogError("Не вдалося надіслати лист для скидання пароля {Email}", email);
+                return (false, "Помилка відправки листа. Спробуйте пізніше.");
             }
 
-            if (user == null && username != null)
-            {
-                user = await this.userRepository.GetByUsernameAsync(username);
-            }
-
-            if (user == null)
-            {
-                this.logger.LogWarning("Користувача з таким логіном не існує: {Email}, {Username}", email, username);
-                return (false, "Користувача з таким логіном не існує", null);
-            }
-
-            if (!this.CheckIfPasswordCorrect(user, password!))
-            {
-                this.logger.LogWarning("Передано невірний пароль при вході у акаунт: {Email}, {Username}", email, username);
-                return (false, "Невірний пароль", null);
-            }
-
-            this.logger.LogInformation("Користувача успішно перевірено при вході у акаунт: {Email}, {Username}", email, username);
-            return (true, "Успішно знайдено", user);
+            this.logger.LogInformation("Надіслано лист для скидання пароля для {Email}", email);
+            return (true, "Інструкції зі скидання пароля надіслано на вашу пошту.");
         }
 
-        /// <summary>
-        /// Відправляє на електронну пошту користувача код підтвердження для верифікації.
-        /// </summary>
-        /// <param name="email">Електронна адреса користувача, на яку буде надіслано код.</param>
-        /// <param name="code">Код підтвердження, який потрібно надіслати користувачу.</param>
-        /// <returns>Асинхронна операція відправлення email-повідомлення.</returns>
+        /// <inheritdoc/>
+        public async Task<(bool Success, string Message)> ResetPasswordAsync(string email, string token, string newPassword)
+        {
+            if (string.IsNullOrWhiteSpace(email) || !this.IsEmailValid(email) ||
+                string.IsNullOrWhiteSpace(token) || this.IsPasswordInvalid(newPassword))
+            {
+                this.logger.LogWarning("Некоректні дані для скидання пароля: {Email}", email);
+                return (false, "Некоректні дані для скидання пароля.");
+            }
+
+            var user = await this.userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                this.logger.LogWarning("Користувача з email {Email} не знайдено для скидання пароля", email);
+                return (false, "Користувача з такою електронною адресою не знайдено.");
+            }
+
+            var result = await this.userManager.ResetPasswordAsync(user, token, newPassword);
+            if (result.Succeeded)
+            {
+                await this.userManager.UpdateSecurityStampAsync(user);
+                this.logger.LogInformation("Пароль успішно змінено для {Email}", email);
+                return (true, "Пароль успішно змінено. Тепер ви можете увійти з новим паролем.");
+            }
+
+            var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+            this.logger.LogWarning("Помилка скидання пароля для {Email}: {Errors}", email, errors);
+            return (false, $"Не вдалося скинути пароль: {errors}");
+        }
+
         private async Task<bool> SendVerificationCodeAsync(string email, string code)
+        {
+            return await this.SendEmailAsync(
+                email,
+                "Verification code",
+                $"Ваш код підтвердження: <strong>{code}</strong>");
+        }
+
+        private async Task<bool> SendEmailAsync(string toEmail, string subject, string bodyHtml)
         {
             var emailUser = Environment.GetEnvironmentVariable("EMAIL_USER");
             var emailPass = Environment.GetEnvironmentVariable("EMAIL_PASS");
 
             if (string.IsNullOrWhiteSpace(emailUser) || string.IsNullOrWhiteSpace(emailPass))
             {
-                this.logger.LogError("SMTP credentials are missing in environment variables.");
+                this.logger.LogError("SMTP credentials (EMAIL_USER/EMAIL_PASS) не встановлено.");
                 return false;
             }
 
             var message = new MimeMessage();
-
             message.From.Add(new MailboxAddress("GraphAn", emailUser));
-            message.To.Add(MailboxAddress.Parse(email));
-            message.Subject = "Verification code";
-
-            message.Body = new TextPart("plain")
-            {
-                Text = $"Ваш код підтвердження: {code}",
-            };
+            message.To.Add(MailboxAddress.Parse(toEmail));
+            message.Subject = subject;
+            message.Body = new TextPart("html") { Text = bodyHtml };
 
             using var client = new SmtpClient();
-
             try
             {
                 await client.ConnectAsync("smtp.gmail.com", 587, false);
                 await client.AuthenticateAsync(emailUser, emailPass);
                 await client.SendAsync(message);
+                await client.DisconnectAsync(true);
+                return true;
             }
             catch (Exception ex)
             {
-                this.logger.LogError(ex, "Помилка відправки email: {Email}", email);
+                this.logger.LogError(ex, "Помилка відправки email на {ToEmail}", toEmail);
                 return false;
             }
-            finally
-            {
-                await client.DisconnectAsync(true);
-            }
-
-            return true;
         }
 
         private string GetPasswordHash(string password)
@@ -287,39 +291,19 @@ namespace GraphAn.BLL.Services
         private bool CheckIfPasswordCorrect(User user, string password)
         {
             var hasher = new PasswordHasher<User>();
-            var verificationResult = hasher.VerifyHashedPassword(user, user.PasswordHash!, password!);
-            if (verificationResult == PasswordVerificationResult.Failed)
-            {
-                return false;
-            }
-
-            return true;
+            var verificationResult = hasher.VerifyHashedPassword(user, user.PasswordHash!, password);
+            return verificationResult != PasswordVerificationResult.Failed;
         }
 
         private bool IsEmailInvalid(string? email)
         {
-            if (email == null)
-            {
-                return true;
-            }
-
-            if (email.Length < 1)
-            {
-                return true;
-            }
-
-            if (email.Length > 100)
-            {
-                return true;
-            }
-
-            if (!Regex.IsMatch(email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
-            {
-                return true;
-            }
-
-            return false;
+            return email == null ||
+                   email.Length < 1 ||
+                   email.Length > 100 ||
+                   !Regex.IsMatch(email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$");
         }
+
+        private bool IsEmailValid(string email) => !this.IsEmailInvalid(email);
 
         private string GenerateCode()
         {
@@ -328,42 +312,16 @@ namespace GraphAn.BLL.Services
 
         private bool IsPasswordInvalid(string? password)
         {
-            if (password == null)
-            {
-                return true;
-            }
-
-            if (password.Length < 8)
-            {
-                return true;
-            }
-
-            if (password.Length > 255)
-            {
-                return true;
-            }
-
-            return false;
+            return password == null ||
+                   password.Length < 8 ||
+                   password.Length > 255;
         }
 
         private bool IsCodeInvalid(string? code)
         {
-            if (code == null)
-            {
-                return true;
-            }
-
-            if (code.Length != 6)
-            {
-                return true;
-            }
-
-            if (!code.All(char.IsDigit))
-            {
-                return true;
-            }
-
-            return false;
+            return code == null ||
+                   code.Length != 6 ||
+                   !code.All(char.IsDigit);
         }
     }
 }

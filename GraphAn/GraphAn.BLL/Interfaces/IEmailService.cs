@@ -38,18 +38,26 @@ namespace GraphAn.BLL.Interfaces
         Task<(bool Success, string Message)> ConfirmRegistrationAsync(string? email, string? code);
 
         /// <summary>
-        /// Перевірка і знаходження користувача для входу у акаунт.</summary>
+        /// Надсилає на електронну пошту користувача посилання для скидання пароля.
+        /// </summary>
         /// <param name="email">Електронна адреса користувача.</param>
-        /// <param name="password">Пароль.</param>
-        /// <param name="username">Ім'я користувача (необов'язково).</param>
+        /// <param name="resetLinkGenerator">Функція для генерації посилання скидання пароля, приймає email та токен.</param>
         /// <returns>
         /// Кортеж, де <c>Success</c> — результат операції,
         /// <c>Message</c> — опис результату або помилки.
-        /// <c>User</c> — об'єкт користувача при успіху.
         /// </returns>
-        Task<(bool Success, string Message, User? User)> UserLoginAsync(
-            string? email,
-            string password,
-            string? username);
+        Task<(bool Success, string Message)> ForgotPasswordAsync(string email, Func<string, string, string> resetLinkGenerator);
+
+        /// <summary>
+        /// Скидає пароль користувача за допомогою токена.
+        /// </summary>
+        /// <param name="email">Електронна адреса користувача.</param>
+        /// <param name="token">Токен скидання пароля.</param>
+        /// <param name="newPassword">Новий пароль.</param>
+        /// <returns>
+        /// Кортеж, де <c>Success</c> — результат операції,
+        /// <c>Message</c> — опис результату або помилки.
+        /// </returns>
+        Task<(bool Success, string Message)> ResetPasswordAsync(string email, string token, string newPassword);
     }
 }

@@ -41,7 +41,6 @@ namespace GraphAn.UI
 
             builder.Host.UseSerilog();
             builder.Services.AddScoped<IEmailService, EmailService>();
-            builder.Services.AddScoped<IJwtService, JwtService>();
             builder.Services.AddScoped<IProjectService, ProjectService>();
             builder.Services.AddScoped<IGraphMetricsService, GraphMetricsService>();
             builder.Services.AddScoped<IAlgorithmService, AlgorithmService>();
@@ -59,7 +58,7 @@ namespace GraphAn.UI
                 // 1. Додаємо Identity з нашою моделлю User та роллю IdentityRole<Guid>
                 builder.Services.AddIdentity<User, IdentityRole<Guid>>(options =>
                 {
-                    // Налаштування паролів (можна залишити стандартні або задати свої)
+                    // Налаштування паролів
                     options.Password.RequireDigit = true;
                     options.Password.RequiredLength = 6;
                     options.Password.RequireNonAlphanumeric = false;
@@ -70,29 +69,34 @@ namespace GraphAn.UI
                     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
                     options.Lockout.MaxFailedAccessAttempts = 5;
 
-                    // Підтвердження email (можна увімкнути пізніше)
+                    // Підтвердження email
                     options.SignIn.RequireConfirmedEmail = false;
 
                     // Ім'я користувача – email не обов'язково співпадає
                     options.User.RequireUniqueEmail = true;
                 })
-                .AddEntityFrameworkStores<AppDbContext>() // використовуємо наш DbContext
-                .AddDefaultTokenProviders();                 // для скидання пароля, підтвердження email
+                .AddEntityFrameworkStores<AppDbContext>()
+                .AddDefaultTokenProviders();
 
-                // 2. Налаштовуємо cookie-автентифікацію (вона використовується за замовчуванням)
+                // 2. Налаштовуємо cookie-автентифікацію для API (без перенаправлень)
                 builder.Services.ConfigureApplicationCookie(options =>
                 {
                     options.Cookie.HttpOnly = true;
                     options.ExpireTimeSpan = TimeSpan.FromDays(14);
-                    options.LoginPath = "/Account/Login";          // шлях до сторінки входу
-                    options.LogoutPath = "/Account/Logout";
-                    options.AccessDeniedPath = "/Account/AccessDenied";
                     options.SlidingExpiration = true;
-                });
 
-                // 3. Якщо ви хочете використовувати авторизацію через куки явно, можна додати:
-                builder.Services.AddAuthentication();
-                builder.Services.AddAuthorization();
+                    // Вимкнути перенаправлення для API – повертати 401/403 замість HTML сторінки
+                    options.Events.OnRedirectToLogin = context =>
+                    {
+                        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                        return Task.CompletedTask;
+                    };
+                    options.Events.OnRedirectToAccessDenied = context =>
+                    {
+                        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                        return Task.CompletedTask;
+                    };
+                });
 
                 // Configure AppDbContext using CONNECTION_STRING from environment or configuration
                 var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING")
@@ -143,8 +147,6 @@ namespace GraphAn.UI
                 if (!app.Environment.IsDevelopment())
                 {
                     app.UseExceptionHandler("/Home/Error");
-
-                    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                     app.UseHsts();
                 }
 

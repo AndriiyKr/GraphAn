@@ -51,5 +51,15 @@ namespace GraphAn.DAL.Repositories
         {
             return await this.DbSet.AnyAsync(u => u.Email == email);
         }
+
+        /// <summary>
+        /// Перевірка існування користувача з переданим іменем.
+        /// </summary>
+        /// <param name="username">Ім'я користувача.</param>
+        /// <returns><see langword="true"/> якщо знайдено; інакше <see langword="false"/>.</returns>
+        public async Task<bool> IfUsernameExistsAsync(string username)
+        {
+            return await this.DbSet.AnyAsync(u => u.UserName == username);
+        }
     }
 }

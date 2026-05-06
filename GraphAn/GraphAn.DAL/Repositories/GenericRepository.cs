@@ -64,7 +64,7 @@ namespace GraphAn.DAL.Repositories
         /// A task that represents the asynchronous operation.
         /// The task result contains the entity if found; otherwise, <see langword="null"/>.
         /// </returns>
-        public async Task<T?> GetByIdAsync(int id)
+        public async Task<T?> GetByIdAsync(object id)
         {
             return await this.dbSet.FindAsync(id);
         }

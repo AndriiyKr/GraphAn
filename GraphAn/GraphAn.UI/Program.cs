@@ -55,7 +55,6 @@ namespace GraphAn.UI
                 // Add services to the container.
                 builder.Services.AddControllersWithViews();
 
-                // 1. Додаємо Identity з нашою моделлю User та роллю IdentityRole<Guid>
                 builder.Services.AddIdentity<User, IdentityRole<Guid>>(options =>
                 {
                     // Налаштування паролів
@@ -64,28 +63,22 @@ namespace GraphAn.UI
                     options.Password.RequireNonAlphanumeric = false;
                     options.Password.RequireUppercase = false;
                     options.Password.RequireLowercase = false;
+                    options.SignIn.RequireConfirmedEmail = false;
+                    options.User.RequireUniqueEmail = true;
 
-                    // Налаштування блокування (lockout)
+                    // Налаштування блокування
                     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
                     options.Lockout.MaxFailedAccessAttempts = 5;
-
-                    // Підтвердження email
-                    options.SignIn.RequireConfirmedEmail = false;
-
-                    // Ім'я користувача – email не обов'язково співпадає
-                    options.User.RequireUniqueEmail = true;
                 })
                 .AddEntityFrameworkStores<AppDbContext>()
                 .AddDefaultTokenProviders();
 
-                // 2. Налаштовуємо cookie-автентифікацію для API (без перенаправлень)
                 builder.Services.ConfigureApplicationCookie(options =>
                 {
                     options.Cookie.HttpOnly = true;
                     options.ExpireTimeSpan = TimeSpan.FromDays(14);
                     options.SlidingExpiration = true;
 
-                    // Вимкнути перенаправлення для API – повертати 401/403 замість HTML сторінки
                     options.Events.OnRedirectToLogin = context =>
                     {
                         context.Response.StatusCode = StatusCodes.Status401Unauthorized;

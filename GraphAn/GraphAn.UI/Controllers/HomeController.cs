@@ -62,6 +62,16 @@ namespace GraphAn.Controllers
         }
 
         /// <summary>
+        /// Відображає сторінку для запиту відновлення пароля.
+        /// </summary>
+        /// <returns><see cref="ViewResult"/> зі сторінкою відновлення пароля.</returns>
+        [HttpGet("home/forgot-password")]
+        public IActionResult ForgotPassword()
+        {
+            return this.View();
+        }
+
+        /// <summary>
         /// Відображає сторінку підтвердження електронної пошти.
         /// </summary>
         /// <returns><see cref="ViewResult"/> зі сторінкою підтвердження.</returns>

@@ -15,7 +15,7 @@ namespace GraphAn.BLL.Services
     public class ProjectService : IProjectService
     {
         private readonly ILogger<ProjectService> logger;
-        private readonly ProjectRepository projectRepository;
+        private readonly IProjectRepository projectRepository;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ProjectService"/> class.
@@ -24,7 +24,7 @@ namespace GraphAn.BLL.Services
         /// <param name="projectRepository">Об'єкт репозиторію проєктів.</param>
         public ProjectService(
             ILogger<ProjectService> logger,
-            ProjectRepository projectRepository)
+            IProjectRepository projectRepository)
         {
             this.logger = logger;
             this.projectRepository = projectRepository;

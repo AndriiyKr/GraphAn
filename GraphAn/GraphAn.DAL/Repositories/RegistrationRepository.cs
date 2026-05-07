@@ -11,7 +11,7 @@ namespace GraphAn.DAL.Repositories
     /// <summary>
     /// Represents a Registration repository.
     /// </summary>
-    public class RegistrationRepository : GenericRepository<Registration>
+    public class RegistrationRepository : GenericRepository<Registration>, IRegistrationRepository
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="RegistrationRepository"/> class.

@@ -11,7 +11,7 @@ namespace GraphAn.DAL.Repositories
     /// <summary>
     /// Represents a User repository.
     /// </summary>
-    public class UserRepository : GenericRepository<User>
+    public class UserRepository : GenericRepository<User>, IUserRepository
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="UserRepository"/> class.

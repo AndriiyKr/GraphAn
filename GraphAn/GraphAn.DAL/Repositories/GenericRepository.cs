@@ -11,7 +11,7 @@ namespace GraphAn.DAL.Repositories
     /// Represents a generic repository that provides basic CRUD operations for entities.
     /// </summary>
     /// <typeparam name="T">The type of the entity.</typeparam>
-    public class GenericRepository<T>
+    public class GenericRepository<T> : IGenericRepository<T>
         where T : class
     {
         /// <summary>

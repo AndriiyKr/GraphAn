@@ -11,7 +11,7 @@ namespace GraphAn.DAL.Repositories
     /// <summary>
     /// Represents a Project repository.
     /// </summary>
-    public class ProjectRepository : GenericRepository<Project>
+    public class ProjectRepository : GenericRepository<Project>, IProjectRepository
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ProjectRepository"/> class.

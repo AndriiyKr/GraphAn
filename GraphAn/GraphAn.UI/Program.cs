@@ -44,9 +44,9 @@ namespace GraphAn.UI
             builder.Services.AddScoped<IProjectService, ProjectService>();
             builder.Services.AddScoped<IGraphMetricsService, GraphMetricsService>();
             builder.Services.AddScoped<IAlgorithmService, AlgorithmService>();
-            builder.Services.AddScoped<UserRepository>();
-            builder.Services.AddScoped<ProjectRepository>();
-            builder.Services.AddScoped<RegistrationRepository>();
+            builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
+            builder.Services.AddScoped<IUserRepository, UserRepository>();
+            builder.Services.AddScoped<IRegistrationRepository, RegistrationRepository>();
 
             try
             {

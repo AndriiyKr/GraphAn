@@ -304,10 +304,8 @@ namespace GraphAn.BLL.Services
         {
             var nodeIds = graph.Nodes.Select(n => n.Id).ToHashSet();
 
-            // --- Компоненти зв'язності (BFS) ---
-            var visited = new HashSet<string>();
+            // Побудова списку суміжності для неорієнтованого графа (без врахування напрямку)
             var adjList = nodeIds.ToDictionary(id => id, _ => new List<string>());
-
             foreach (var edge in graph.Edges)
             {
                 if (!nodeIds.Contains(edge.From) || !nodeIds.Contains(edge.To))
@@ -319,6 +317,8 @@ namespace GraphAn.BLL.Services
                 adjList[edge.To].Add(edge.From);
             }
 
+            // --- Компоненти зв'язності (BFS) ---
+            var visited = new HashSet<string>();
             int components = 0;
             foreach (var node in nodeIds)
             {
@@ -344,7 +344,6 @@ namespace GraphAn.BLL.Services
             }
 
             var result = new ConnectivityResult { ComponentsCount = components };
-
             if (components != 1)
             {
                 this.logger.LogInformation("Граф незв'язний — зв'язність рівна 0");
@@ -365,19 +364,32 @@ namespace GraphAn.BLL.Services
 
             result.VertexConnectivity = vertexConnectivity == nodeIds.Count ? nodeIds.Count - 1 : 1;
 
-            // --- Реберна зв'язність (видаляємо по одному ребру) ---
-            int edgeConnectivity = graph.Edges.Count;
-            for (int i = 0; i < graph.Edges.Count; i++)
+            // --- Реберна зв'язність (максимальний потік) ---
+            // Для неорієнтованого графа використовуємо алгоритм пошуку максимального потоку між першою вершиною та всіма іншими
+            int edgeConnectivity = int.MaxValue;
+            if (nodeIds.Count > 1)
             {
-                var edgesWithout = graph.Edges.Where((_, idx) => idx != i).ToList();
-                if (!this.IsConnected(nodeIds, edgesWithout))
+                var first = nodeIds.First();
+                foreach (var other in nodeIds.Skip(1))
                 {
-                    edgeConnectivity = 1;
-                    break;
+                    int flow = this.MaxFlowBetweenVertices(graph, first, other);
+                    if (flow < edgeConnectivity)
+                    {
+                        edgeConnectivity = flow;
+                    }
+
+                    if (edgeConnectivity == 1)
+                    {
+                        break;
+                    }
                 }
             }
+            else
+            {
+                edgeConnectivity = 0;
+            }
 
-            result.EdgeConnectivity = edgeConnectivity == graph.Edges.Count ? graph.Edges.Count : 1;
+            result.EdgeConnectivity = edgeConnectivity == int.MaxValue ? 0 : edgeConnectivity;
 
             this.logger.LogInformation("Обчислено числа зв'язності графа");
             return result;
@@ -483,6 +495,74 @@ namespace GraphAn.BLL.Services
             }
 
             return visited.Count == nodes.Count;
+        }
+
+        /// <summary>
+        /// Обчислює максимальний потік між двома вершинами в неорієнтованому графі (алгоритм Едмондса-Карпа).
+        /// </summary>
+        /// <param name="graph">Граф.</param>
+        /// <param name="source">Вершина-джерело.</param>
+        /// <param name="sink">Вершина-стік.</param>
+        /// <returns>Максимальний потік (ціле число).</returns>
+        private int MaxFlowBetweenVertices(GraphDto graph, string source, string sink)
+        {
+            // Побудова мережі: для кожного неорієнтованого ребра додаємо два орієнтованих ребра з пропускною здатністю 1
+            var capacities = new Dictionary<(string, string), int>();
+            foreach (var edge in graph.Edges)
+            {
+                capacities[(edge.From, edge.To)] = 1;
+                capacities[(edge.To, edge.From)] = 1;
+            }
+
+            int maxFlow = 0;
+            while (true)
+            {
+                // BFS для пошуку шляху (алгоритм Едмондса-Карпа)
+                var parent = new Dictionary<string, string>();
+                var queue = new Queue<string>();
+                queue.Enqueue(source);
+                parent[source] = null!;
+                bool pathFound = false;
+
+                while (queue.Count > 0 && !pathFound)
+                {
+                    var current = queue.Dequeue();
+                    foreach (var neighbor in capacities.Keys.Where(k => k.Item1 == current).Select(k => k.Item2))
+                    {
+                        if (!parent.ContainsKey(neighbor) && capacities.GetValueOrDefault((current, neighbor)) > 0)
+                        {
+                            parent[neighbor] = current;
+                            if (neighbor == sink)
+                            {
+                                pathFound = true;
+                                break;
+                            }
+
+                            queue.Enqueue(neighbor);
+                        }
+                    }
+                }
+
+                if (!pathFound)
+                {
+                    break;
+                }
+
+                // Збільшуємо потік на 1 (оскільки пропускна здатність 1)
+                maxFlow++;
+
+                // Оновлюємо залишкові пропускні здатності вздовж знайденого шляху
+                var node = sink;
+                while (node != source)
+                {
+                    var prev = parent[node];
+                    capacities[(prev, node)]--;
+                    capacities[(node, prev)]++;
+                    node = prev;
+                }
+            }
+
+            return maxFlow;
         }
     }
 }

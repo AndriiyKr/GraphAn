@@ -6,6 +6,7 @@ namespace GraphAn.BLL.Services
 {
     using System.Security.Cryptography;
     using System.Text.RegularExpressions;
+    using System.Threading.Tasks;
     using GraphAn.BLL.Interfaces;
     using GraphAn.DAL.Models;
     using GraphAn.DAL.Repositories;
@@ -27,8 +28,8 @@ namespace GraphAn.BLL.Services
         };
 
         private readonly ILogger<EmailService> logger;
-        private readonly UserRepository userRepository;
-        private readonly RegistrationRepository registrationRepository;
+        private readonly IUserRepository userRepository;
+        private readonly IRegistrationRepository registrationRepository;
         private readonly UserManager<User> userManager;
 
         /// <summary>
@@ -40,8 +41,8 @@ namespace GraphAn.BLL.Services
         /// <param name="userManager">Менеджер користувачів Identity.</param>
         public EmailService(
             ILogger<EmailService> logger,
-            UserRepository userRepository,
-            RegistrationRepository registrationRepository,
+            IUserRepository userRepository,
+            IRegistrationRepository registrationRepository,
             UserManager<User> userManager)
         {
             this.logger = logger;
@@ -242,7 +243,13 @@ namespace GraphAn.BLL.Services
             return (false, $"Не вдалося скинути пароль: {errors}");
         }
 
-        private async Task<bool> SendVerificationCodeAsync(string email, string code)
+        /// <summary>
+        /// Надсилає код підтвердження на електронну пошту користувача.
+        /// </summary>
+        /// <param name="email">Електронна адреса отримувача.</param>
+        /// <param name="code">6-значний код підтвердження.</param>
+        /// <returns><see langword="true"/> якщо лист успішно відправлено; інакше <see langword="false"/>.</returns>
+        protected virtual async Task<bool> SendVerificationCodeAsync(string email, string code)
         {
             return await this.SendEmailAsync(
                 email,
@@ -250,7 +257,14 @@ namespace GraphAn.BLL.Services
                 $"Ваш код підтвердження: <strong>{code}</strong>");
         }
 
-        private async Task<bool> SendEmailAsync(string toEmail, string subject, string bodyHtml)
+        /// <summary>
+        /// Надсилає електронний лист через SMTP сервер Gmail.
+        /// </summary>
+        /// <param name="toEmail">Електронна адреса отримувача.</param>
+        /// <param name="subject">Тема листа.</param>
+        /// <param name="bodyHtml">HTML-вміст листа.</param>
+        /// <returns><see langword="true"/> якщо лист успішно відправлено; інакше <see langword="false"/>.</returns>
+        protected virtual async Task<bool> SendEmailAsync(string toEmail, string subject, string bodyHtml)
         {
             var emailUser = Environment.GetEnvironmentVariable("EMAIL_USER");
             var emailPass = Environment.GetEnvironmentVariable("EMAIL_PASS");

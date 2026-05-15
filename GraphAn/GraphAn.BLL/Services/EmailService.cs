@@ -1,4 +1,4 @@
-﻿// <copyright file="EmailService.cs" company="GraphAn">
+// <copyright file="EmailService.cs" company="GraphAn">
 // Copyright (c) GraphAn. All rights reserved.
 // </copyright>
 
@@ -20,7 +20,7 @@ namespace GraphAn.BLL.Services
     /// </summary>
     public class EmailService : IEmailService
     {
-        private static readonly User SystemUser = new ()
+        private static readonly User SystemUser = new()
         {
             UserName = "system",
             Email = "system@local",
@@ -198,10 +198,11 @@ namespace GraphAn.BLL.Services
             var token = await this.userManager.GeneratePasswordResetTokenAsync(user);
             var resetLink = resetLinkGenerator(user.Email!, token);
 
-            string bodyHtml = $"<p>Для скидання пароля перейдіть за посиланням: <a href='{resetLink}'>скинути пароль</a></p><p>Якщо ви не ініціювали скидання, проігноруйте цей лист.</p>";
+            string bodyHtml = this.GenerateResetPasswordEmailHtml(resetLink);
+
             var sendResult = await this.SendEmailAsync(
                 email,
-                "Відновлення пароля",
+                "Відновлення пароля GraphAn",
                 bodyHtml);
             if (!sendResult)
             {
@@ -251,10 +252,11 @@ namespace GraphAn.BLL.Services
         /// <returns><see langword="true"/> якщо лист успішно відправлено; інакше <see langword="false"/>.</returns>
         protected virtual async Task<bool> SendVerificationCodeAsync(string email, string code)
         {
+            string bodyHtml = this.GenerateVerificationEmailHtml(code);
             return await this.SendEmailAsync(
                 email,
-                "Verification code",
-                $"Ваш код підтвердження: <strong>{code}</strong>");
+                "Підтвердження реєстрації GraphAn",
+                bodyHtml);
         }
 
         /// <summary>
@@ -296,6 +298,145 @@ namespace GraphAn.BLL.Services
                 return false;
             }
         }
+
+        // =========================================================================
+        // ГЕНЕРАЦІЯ HTML-ШАБЛОНІВ ДЛЯ ЛИСТІВ
+        // =========================================================================
+
+        private string GetBaseEmailTemplate(string title, string content)
+        {
+            int year = DateTime.UtcNow.Year;
+            return $@"
+            <!DOCTYPE html>
+            <html lang=""uk"">
+            <head>
+                <meta charset=""UTF-8"">
+                <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+                <title>{title}</title>
+                <style>
+                    body {{
+                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                        background-color: #f8f9fa;
+                        margin: 0;
+                        padding: 0;
+                        color: #333333;
+                    }}
+                    .email-wrapper {{
+                        max-width: 600px;
+                        margin: 40px auto;
+                        background-color: #ffffff;
+                        border-radius: 16px;
+                        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+                        overflow: hidden;
+                        border: 1px solid #eeeeee;
+                    }}
+                    .email-header {{
+                        background-color: #0d6efd;
+                        color: #ffffff;
+                        padding: 30px 20px;
+                        text-align: center;
+                    }}
+                    .email-header h1 {{
+                        margin: 0;
+                        font-size: 28px;
+                        font-weight: 700;
+                        letter-spacing: 1px;
+                    }}
+                    .email-body {{
+                        padding: 30px;
+                        font-size: 16px;
+                        line-height: 1.6;
+                    }}
+                    .email-body p {{
+                        margin: 0 0 15px 0;
+                    }}
+                    .highlight-box {{
+                        background-color: #f8f9fa;
+                        border-radius: 12px;
+                        padding: 20px;
+                        text-align: center;
+                        margin: 25px 0;
+                        border: 1px dashed #ced4da;
+                    }}
+                    .otp-code {{
+                        font-size: 32px;
+                        font-weight: 700;
+                        color: #0d6efd;
+                        letter-spacing: 5px;
+                        margin: 0;
+                    }}
+                    .action-button {{
+                        display: inline-block;
+                        padding: 12px 30px;
+                        background-color: #0d6efd;
+                        color: #ffffff !important;
+                        text-decoration: none;
+                        border-radius: 8px;
+                        font-weight: 600;
+                        font-size: 16px;
+                        margin: 20px 0;
+                    }}
+                    .email-footer {{
+                        background-color: #f8f9fa;
+                        padding: 20px;
+                        text-align: center;
+                        font-size: 13px;
+                        color: #6c757d;
+                        border-top: 1px solid #eeeeee;
+                    }}
+                </style>
+            </head>
+            <body>
+                <div class=""email-wrapper"">
+                    <div class=""email-header"">
+                        <h1>GraphAn</h1>
+                    </div>
+                    <div class=""email-body"">
+                        {content}
+                    </div>
+                    <div class=""email-footer"">
+                        <p>Цей лист згенеровано автоматично. Будь ласка, не відповідайте на нього.</p>
+                        <p>&copy; {year} GraphAn. Усі права захищено.</p>
+                    </div>
+                </div>
+            </body>
+            </html>";
+        }
+
+        private string GenerateVerificationEmailHtml(string code)
+        {
+            string content = $@"
+                <h2 style=""color: #212529; margin-top: 0; text-align: center;"">Вітаємо!</h2>
+                <p>Дякуємо, що обрали <strong>GraphAn</strong> — інтерактивну платформу для візуального моделювання та аналізу графових структур.</p>
+                <p>Ви надіслали запит на реєстрацію. Для підтвердження вашої електронної адреси та завершення процесу, будь ласка, використайте наступний OTP код:</p>
+                <div class=""highlight-box"">
+                    <p class=""otp-code"">{code}</p>
+                </div>
+                <p>Цей код дійсний протягом <strong>10 хвилин</strong>. Якщо ви не завершите реєстрацію за цей час, вам потрібно буде повторити запит.</p>
+                <p style=""color: #6c757d; font-size: 14px;"">Якщо ви не ініціювали цей запит, не хвилюйтеся — ваш обліковий запис у безпеці. Просто проігноруйте цей лист.</p>
+                <p>З найкращими побажаннями,<br>Команда GraphAn</p>";
+
+            return this.GetBaseEmailTemplate("Підтвердження реєстрації GraphAn", content);
+        }
+
+        private string GenerateResetPasswordEmailHtml(string resetLink)
+        {
+            string content = $@"
+                <h2 style=""color: #212529; margin-top: 0; text-align: center;"">Відновлення пароля</h2>
+                <p>Ви (або хтось інший) надіслали запит на скидання пароля для вашого облікового запису <strong>GraphAn</strong>.</p>
+                <p>Для того, щоб створити новий пароль, натисніть на кнопку нижче:</p>
+                <div style=""text-align: center;"">
+                    <a href=""{resetLink}"" class=""action-button"">Скинути пароль</a>
+                </div>
+                <p>Або скопіюйте та вставте це посилання у рядок браузера:</p>
+                <p style=""word-break: break-all; font-size: 14px; color: #0d6efd;"">{resetLink}</p>
+                <p style=""color: #6c757d; font-size: 14px;"">Якщо ви не надсилали цей запит, проігноруйте цей лист. Ваш старий пароль залишиться дійсним.</p>
+                <p>З найкращими побажаннями,<br>Команда GraphAn</p>";
+
+            return this.GetBaseEmailTemplate("Відновлення пароля GraphAn", content);
+        }
+
+        // =========================================================================
 
         private string GetPasswordHash(string password)
         {

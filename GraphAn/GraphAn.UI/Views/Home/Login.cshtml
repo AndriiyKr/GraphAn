@@ -32,6 +32,8 @@
                     <a href="/Home/ForgotPassword" class="small text-primary text-decoration-none fw-bold">Забули пароль?</a>
                 </div>
 
+                <div id="auth-alert" class="alert d-none rounded-3 py-2 small mb-3 text-center"></div>
+
                 <button type="submit" class="btn btn-primary w-100 py-3 rounded-3 fw-bold shadow-sm mb-3">
                     УВІЙТИ
                 </button>
@@ -47,12 +49,13 @@
 
 @section Scripts {
     <script>
-        document.getElementById('loginForm').addEventListener('submit', async function(e) {
-            e.preventDefault(); // Зупиняємо стандартну відправку форми
-
+                document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const alertDiv = document.getElementById('auth-alert');
             const btn = this.querySelector('button[type="submit"]');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Зачекайте...';
+
+            // Скидання стану
+            alertDiv.classList.add('d-none');
             btn.disabled = true;
 
             const data = {
@@ -70,15 +73,18 @@
                 const result = await response.json();
 
                 if (response.ok) {
-                    window.location.href = '/Home/Projects'; // Перехід до проєктів
+                    window.location.href = '/Home/Projects';
                 } else {
-                    alert(result.message || 'Невірний логін або пароль');
-                    btn.innerHTML = originalText;
+                    // Вивід помилки у форму
+                    alertDiv.textContent = result.message || 'Невірний логін або пароль';
+                    alertDiv.className = 'alert alert-danger rounded-3 py-2 small mb-3 text-center';
+                    alertDiv.classList.remove('d-none');
                     btn.disabled = false;
                 }
             } catch (err) {
-                alert('Помилка з\'єднання з сервером');
-                btn.innerHTML = originalText;
+                alertDiv.textContent = 'Помилка з\'єднання з сервером';
+                alertDiv.className = 'alert alert-danger rounded-3 py-2 small mb-3 text-center';
+                alertDiv.classList.remove('d-none');
                 btn.disabled = false;
             }
         });

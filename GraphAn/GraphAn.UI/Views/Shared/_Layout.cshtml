@@ -1,4 +1,7 @@
-﻿<!DOCTYPE html>
+﻿@{
+    var isCanvas = ViewData["IsCanvasPage"] as bool? ?? false;
+}
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -7,9 +10,13 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/GraphAn.styles.css" asp-append-version="true" />
+    @if (!isCanvas)
+    {
+        <link rel="stylesheet" href="~/css/site-pages.css" asp-append-version="true" />
+    }
     @await RenderSectionAsync("Styles", required: false)
 </head>
-<body>
+<body class="@(isCanvas ? "" : "page-with-footer")">
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
@@ -18,7 +25,7 @@
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between align-items-center">
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-controller="Home" asp-action="Index">Головна</a>
@@ -36,13 +43,13 @@
                     <ul class="navbar-nav">
                         @if (User.Identity?.IsAuthenticated == true)
                         {
-                            <li class="nav-item">
-                                <span class="navbar-text text-dark">Привіт, @User.Identity.Name!</span>
-                            </li>
-                            <li class="nav-item">
-                                <form id="logoutForm" asp-controller="Auth" asp-action="Logout" method="post" class="form-inline">
-                                    <button type="submit" class="btn btn-link nav-link text-dark" style="border:none; background:transparent;">Вийти</button>
-                                </form>
+                            <li class="nav-item d-flex align-items-center">
+                                @if (!String.IsNullOrWhiteSpace(User.Identity?.Name))
+                                {
+                                    <span class="navbar-text text-dark me-2">Привіт, @User.Identity.Name!</span>
+                                }
+
+                                <button id="logoutNavBtn" type="button" class="btn btn-link nav-link text-dark p-0" style="border:none; background:transparent;">Вийти</button>
                             </li>
                         }
                         else
@@ -65,14 +72,32 @@
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - GraphAn - <a asp-controller="Home" asp-action="Privacy">Конфіденційність</a>
-        </div>
-    </footer>
+    @if (!isCanvas)
+    {
+        <footer class="border-top footer text-muted">
+            <div class="container">
+                &copy; 2026 - GraphAn - <a asp-controller="Home" asp-action="Privacy">Конфіденційність</a>
+            </div>
+        </footer>
+    }
+
+    <!-- Hidden logout form used by navbar and page buttons -->
+    <form id="logoutForm" action="/api/auth/logout" method="post" class="d-none">
+        @Html.AntiForgeryToken()
+    </form>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        // Global logout handler: submit hidden form to include antiforgery token if needed
+        document.getElementById('logoutNavBtn')?.addEventListener('click', function (e) {
+            e.preventDefault();
+            const f = document.getElementById('logoutForm');
+            if (f) f.submit();
+            else fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' }).then(()=>window.location='/');
+        });
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

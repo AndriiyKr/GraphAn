@@ -38,21 +38,12 @@ namespace GraphAn.BLL.Services
                     (false, "Вершину не знайдено у графі", null));
             }
 
-            foreach (var edge in graph.Edges)
+            // Якщо є явно вказані негативні ваги — відхиляємо (Дейкстра не працює з від'ємними вагами)
+            if (graph.Edges.Any(e => e.HasWeight && e.Weight < 0))
             {
-                if (edge.Weight < 0)
-                {
-                    this.logger.LogWarning("Алгоритм Дейкстри не працює з від'ємними вагами");
-                    return Task.FromResult<(bool, string, DijkstraResult?)>(
-                        (false, "Алгоритм Дейкстри не працює з від'ємними вагами", null));
-                }
-
-                if (!edge.HasWeight)
-                {
-                    this.logger.LogWarning("Не всі ребра мають вагу");
-                    return Task.FromResult<(bool, string, DijkstraResult?)>(
-                        (false, "Не всі ребра мають вагу", null));
-                }
+                this.logger.LogWarning("Алгоритм Дейкстри не працює з від'ємними вагами");
+                return Task.FromResult<(bool, string, DijkstraResult?)>(
+                    (false, "Алгоритм Дейкстри не працює з від'ємними вагами", null));
             }
 
             if (startId == endId)
@@ -72,7 +63,7 @@ namespace GraphAn.BLL.Services
             var unvisited = new HashSet<string>(nodeIds);
             dist[startId] = 0;
 
-            // будуємо список суміжності з вагами
+            // будуємо список суміжності з вагами (за відсутності ваги вважати вагу = 1)
             var adjList = nodeIds.ToDictionary(id => id, _ => new List<(string To, double Weight, string EdgeId)>());
             foreach (var edge in graph.Edges)
             {
@@ -81,10 +72,12 @@ namespace GraphAn.BLL.Services
                     continue;
                 }
 
-                adjList[edge.From].Add((edge.To, edge.Weight, edge.Id));
+                var weight = edge.HasWeight ? edge.Weight : 1.0;
+
+                adjList[edge.From].Add((edge.To, weight, edge.Id));
                 if (!graph.Directed)
                 {
-                    adjList[edge.To].Add((edge.From, edge.Weight, edge.Id));
+                    adjList[edge.To].Add((edge.From, weight, edge.Id));
                 }
             }
 
@@ -159,16 +152,7 @@ namespace GraphAn.BLL.Services
         /// <inheritdoc/>
         public Task<(bool Success, string Message, FloydWarshallResult? Result)> RunFloydWarshallAsync(GraphDto graph)
         {
-            foreach (var edge in graph.Edges)
-            {
-                if (!edge.HasWeight)
-                {
-                    this.logger.LogWarning("Не всі ребра мають вагу");
-                    return Task.FromResult<(bool, string, FloydWarshallResult?)>(
-                        (false, "Не всі ребра мають вагу", null));
-                }
-            }
-
+            // treat missing weights as 1.0 by default
             var nodes = graph.Nodes.OrderBy(n => n.Id).ToList();
             int n = nodes.Count;
             var nodeIndex = new Dictionary<string, int>();
@@ -201,15 +185,17 @@ namespace GraphAn.BLL.Services
                     continue;
                 }
 
-                if (edge.Weight < dist[u, v])
+                var weight = edge.HasWeight ? edge.Weight : 1.0;
+
+                if (weight < dist[u, v])
                 {
-                    dist[u, v] = edge.Weight;
+                    dist[u, v] = weight;
                     pred[u, v] = u + 1;
                 }
 
-                if (!graph.Directed && edge.Weight < dist[v, u])
+                if (!graph.Directed && weight < dist[v, u])
                 {
-                    dist[v, u] = edge.Weight;
+                    dist[v, u] = weight;
                     pred[v, u] = v + 1;
                 }
             }

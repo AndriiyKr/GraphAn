@@ -15,7 +15,7 @@
                     <strong>Ласкаво просимо, @User.Identity.Name!</strong>
                 </div>
                 <a href="/home/projects" class="btn btn-primary btn-lg">Перейти до моїх проєктів</a>
-                <button id="logoutBtn" class="btn btn-outline-secondary btn-lg ms-2">Вийти</button>
+                <button id="logoutBtn" type="button" class="btn btn-outline-secondary btn-lg ms-2">Вийти</button>
                 <form id="logoutForm" action="/api/auth/logout" method="post" class="d-none"></form>
             }
             else
@@ -58,7 +58,15 @@
 
 @section Scripts {
     <script>
-        // Додатковий скрипт для виходу через POST
+        // Logout via fetch for the button on the page
+        document.getElementById('logoutBtn')?.addEventListener('click', function (e) {
+            e.preventDefault();
+            fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' })
+                .then(() => { window.location.href = '/'; })
+                .catch(() => { window.location.href = '/'; });
+        });
+
+        // Keep existing form submit handler as fallback
         document.getElementById('logoutForm')?.addEventListener('submit', function(e) {
             fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' })
                 .then(() => window.location.href = '/');

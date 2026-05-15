@@ -7,11 +7,44 @@
     string initialGraphJson = (Model != null && !string.IsNullOrEmpty(Model.GraphData)) ? Model.GraphData : "{}";
     // Отримуємо чисту назву проєкту для збереження
     string cleanProjectName = Model?.Name ?? "Новий проєкт";
+    ViewData["IsCanvasPage"] = true; // mark this page as canvas so layout won't load site-pages.css
 }
 
 @section Styles {
     <link rel="stylesheet" href="~/css/canvas.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <style>
+        /* highlights for algorithm results */
+        .node-group.highlight .graph-node { stroke: #ff8a00; stroke-width: 4px; }
+        .edge-weight-group.highlight-edge .graph-edge { stroke: #ff8a00 !important; stroke-width: 4px !important; }
+        .algorithm-result { font-size: 0.95rem; }
+        .algorithm-result pre { white-space: pre-wrap; }
+        /* Floyd matrices styling */
+        .floyd-matrices { margin-top: 1rem; }
+        .matrix-table { width:100%; border-collapse:collapse; border-radius:12px; overflow:hidden; }
+        .matrix-table th, .matrix-table td { padding: 10px; text-align:center; border-bottom:1px solid rgba(0,0,0,0.04); }
+        .matrix-table thead th { background:#f8fafc; font-weight:700; }
+        .matrix-cell.clickable { cursor:pointer; color:#4f46e5; }
+        .floyd-stepper { background:#0f172a; color:#fff; padding:14px; border-radius:10px; text-align:center; margin-top:12px; }
+        /* DFS/BFS traversal table */
+        .traversal-table { width:100%; border-collapse:collapse; margin-top:12px; }
+        .traversal-table th, .traversal-table td { padding:12px 10px; border-bottom:1px solid rgba(0,0,0,0.04); text-align:center; }
+        .traversal-table thead th { background:#0f172a; color:#fff; font-weight:700; text-align:center; }
+        .traversal-backtrack { color:#94a3b8; font-style:italic; }
+        /* Dijkstra weight box */
+        .weight-box { background:#0f172a; color:#fff; border-radius:12px; padding:24px; text-align:center; margin-top:12px; box-shadow:0 8px 20px rgba(15,23,42,0.08); }
+        .weight-box .label { font-size:0.85rem; color:#9ca3af; text-transform:uppercase; letter-spacing:1px; }
+        .weight-box .value { font-size:40px; font-weight:800; margin-top:6px; }
+        .path-small { color:#374151; margin-top:8px; }
+
+        .analysis-section { margin-top: 20px; }
+        .analysis-section h6 { font-size: 1rem; font-weight: bold; margin-bottom: 10px; }
+        .analysis-section .value { font-size: 1.5rem; font-weight: bold; color: #1d4ed8; }
+        .analysis-section .text-muted { font-style: italic; color: #6b7280; }
+        .matrix-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+        .matrix-table th, .matrix-table td { padding: 12px; text-align: center; border-bottom: 1px solid rgba(0, 0, 0, 0.04); }
+        .matrix-table thead th { background: #f8fafc; font-weight: 700; }
+    </style>
 }
 
 <div class="editor-interface">
@@ -67,13 +100,72 @@
 
         <div class="panel-section mt-auto">
             <h6 class="text-uppercase fw-bold text-muted mb-3"><i class="fa-solid fa-gears me-2"></i>Алгоритми</h6>
+
             <div class="algorithm-item mb-3 bg-light p-3 rounded-4 border">
                 <label class="small fw-bold mb-2">АЛГОРИТМ ДЕЙКСТРИ</label>
-                <div class="row g-2">
-                    <div class="col-6"><select id="dijkstra-start" class="form-select form-select-sm rounded-3"><option>Початкова</option></select></div>
-                    <div class="col-6"><select id="dijkstra-end" class="form-select form-select-sm rounded-3"><option>Кінцева</option></select></div>
+                <div class="row g-2 mb-2">
+                    <div class="col-6"><select id="dijkstra-start" class="form-select form-select-sm rounded-3"><option value="">Початкова</option></select></div>
+                    <div class="col-6"><select id="dijkstra-end" class="form-select form-select-sm rounded-3"><option value="">Кінцева</option></select></div>
+                </div>
+                 <div class="d-flex justify-content-end mb-2">
+                    <button id="floyd-clear-highlights" class="btn btn-sm btn-outline-secondary">Очистити підсвічування</button>
+                </div>
+                <div class="d-grid">
+                    <button id="run-dijkstra" class="btn btn-sm btn-primary">Обчислити найкоротший шлях</button>
+                </div>
+
+                <!-- Dijkstra result placed directly under its block -->
+                <div id="dijkstra-result" class="mt-3"></div>
+            </div>
+
+            <div class="algorithm-item mb-3 bg-light p-3 rounded-4 border">
+                <label class="small fw-bold mb-2">ПОШУК У ГЛИБИНУ (DFS)</label>
+                <div class="mb-2"><select id="dfs-start" class="form-select form-select-sm rounded-3"><option value="">Виберіть вершину</option></select></div>
+                <div class="d-grid"><button id="run-dfs" class="btn btn-sm btn-primary">Запустити DFS обхід</button></div>
+
+                <!-- DFS result placed under its block -->
+                <div id="dfs-result" class="mt-3"></div>
+            </div>
+
+            <div class="algorithm-item mb-3 bg-light p-3 rounded-4 border">
+                <label class="small fw-bold mb-2">ПОШУК У ШИРИНУ (BFS)</label>
+                <div class="mb-2"><select id="bfs-start" class="form-select form-select-sm rounded-3"><option value="">Виберіть вершину</option></select></div>
+                <div class="d-grid"><button id="run-bfs" class="btn btn-sm btn-primary">Запустити BFS обхід</button></div>
+
+                <!-- BFS result placed under its block -->
+                <div id="bfs-result" class="mt-3"></div>
+            </div>
+
+            <div class="algorithm-item mb-3 bg-light p-3 rounded-4 border">
+                <label class="small fw-bold mb-2">АЛГОРИТМ ФЛОЙДА-ВОРШЕЛА</label>
+                <div class="d-grid mb-2"><button id="run-floyd" class="btn btn-sm btn-primary">Побудувати матриці шляхів</button></div>
+                <div id="floyd-container" class="floyd-matrices" style="display:none;">
+                    <div class="floyd-stepper d-flex justify-content-between align-items-center mb-3">
+                        <button id="floyd-prev" class="btn btn-ghost btn-sm text-white"><i class="fa-solid fa-chevron-left"></i></button>
+                        <div>
+                            <div class="small text-uppercase">Поточний крок</div>
+                            <div id="floyd-step-title" class="fw-bold">—</div>
+                        </div>
+                        <button id="floyd-next" class="btn btn-ghost btn-sm text-white"><i class="fa-solid fa-chevron-right"></i></button>
+                    </div>
+
+                    <div class="d-flex justify-content-end mb-2">
+                        <button id="floyd-clear-highlights" class="btn btn-sm btn-outline-secondary">Очистити підсвічування</button>
+                    </div>
+
+                    <div>
+                        <h6 class="small text-muted">Матриця відстаней M(<span id="floyd-step-index">0</span>)</h6>
+                        <div id="floyd-distance" class="mb-3"></div>
+                    </div>
+                    <div>
+                        <h6 class="small text-muted">Матриця предків T(<span id="floyd-step-index-2">0</span>)</h6>
+                        <div id="floyd-predecessor"></div>
+                    </div>
+                    <div class="mt-2"><small class="text-muted">Порада: клацніть на будь-яку клітинку в матриці M, щоб підсвітити шлях між вершинами на графі.</small></div>
                 </div>
             </div>
+
+            <div id="algorithm-result" class="mt-3 algorithm-result"></div>
         </div>
 
         <div class="pt-3">
@@ -121,8 +213,387 @@
         const projectName = '@Html.Raw(cleanProjectName)'; // Використовуємо змінну з чистою назвою
         const initialData = @Html.Raw(initialGraphJson);
 
-        document.addEventListener("DOMContentLoaded", () => {
-            // Завантаження початкових даних (якщо є)
+        // helper to render traversal protocol (DFS/BFS)
+        function renderTraversalResult(traversal, containerId, type = 'DFS') {
+            const container = document.getElementById(containerId || 'algorithm-result');
+            if (!traversal || !traversal.protocol) { container.innerHTML = '<div class="text-muted">Немає даних</div>'; return; }
+            let html = '';
+            const collectionLabel = type.toUpperCase() === 'BFS' ? 'Черга' : 'Стек';
+            html += '<table class="traversal-table"><thead><tr><th>V</th><th>№</th><th>${collectionLabel}</th><th>Ребро</th></tr></thead><tbody>';
+            traversal.protocol.forEach(step => {
+                const v = step.vertex || '—';
+                const num = (step.stepNumber !== null && step.stepNumber !== undefined) ? step.stepNumber : '—';
+                const stack = (step.collection && step.collection.length) ? step.collection.join(', ') : '∅';
+                const edge = step.treeEdge || '—';
+                const isBack = (edge === 'backtrack' || v === '—');
+                html += `<tr ${isBack ? 'class="traversal-backtrack"' : ''}>`;
+                html += `<td>${v}</td><td>${num}</td><td>${stack}</td><td><small class="text-muted">${edge}</small></td>`;
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        // helper to render dijkstra result: weight box + path
+        function renderDijkstraResult(dijkstra) {
+            const container = document.getElementById('dijkstra-result');
+            if (!dijkstra) { container.innerHTML = '<div class="text-muted">Немає даних</div>'; return; }
+            const weight = (dijkstra.totalWeight !== undefined && dijkstra.totalWeight !== null) ? dijkstra.totalWeight : dijkstra.totalweight ?? 0;
+            const path = dijkstra.pathNodes && dijkstra.pathNodes.length ? dijkstra.pathNodes.join(' → ') : '—';
+            let html = '';
+            html += `<div class="weight-box"><div class="label">Загальна вага шляху</div><div class="value">${weight}</div></div>`;
+            html += `<div class="path-small">Шлях: ${path}</div>`;
+            container.innerHTML = html;
+        }
+
+        // Define helpers early so they are available when floyd step rendering runs
+        window.buildMatrixTable = function(mat, labels, clickable) {
+            let html = '<table class="matrix-table"><thead><tr><th>i \\ j</th>';
+            for (let li = 0; li < labels.length; li++) html += `<th>${labels[li]}</th>`;
+            html += '</tr></thead><tbody>';
+            for (let i = 0; i < mat.length; i++) {
+                html += '<tr>';
+                html += `<th>${labels[i]}</th>`;
+                for (let j = 0; j < mat[i].length; j++) {
+                    const val = mat[i][j];
+                    const display = (val === null || val === undefined) ? '—' : val;
+                    const cls = (clickable ? 'matrix-cell clickable' : 'matrix-cell');
+                    html += `<td class="${cls}" data-row="${i}" data-col="${j}">${display}</td>`;
+                }
+                html += '</tr>';
+            }
+            html += '</tbody></table>';
+            return html;
+        };
+
+        window.highlightPathFromFloyd = function(i, j) {
+            clearHighlights();
+            if (!floydResult) return;
+            const labels = floydResult.labels || [];
+            if (i < 0 || j < 0 || i >= labels.length || j >= labels.length) return;
+            const step = floydResult.steps[floydCurrentStep];
+            const pred = step.predecessorMatrix;
+            function reconstruct(iIdx, jIdx) {
+                const path = [];
+                if (!pred || !pred[iIdx] || pred[iIdx][jIdx] == null) return path;
+                if (iIdx === jIdx) { return [iIdx]; }
+                let current = jIdx;
+                path.unshift(current);
+                const maxIter = labels.length * 2;
+                let iter = 0;
+                while (current !== iIdx && iter < maxIter) {
+                    const p = pred[iIdx][current];
+                    if (p == null || p <= 0) break;
+                    const pIdx = p - 1;
+                    if (pIdx === current) break;
+                    path.unshift(pIdx);
+                    current = pIdx;
+                    iter++;
+                }
+                if (path[0] !== iIdx) {
+                    if (pred[iIdx] && pred[iIdx][jIdx] === iIdx + 1) {
+                        return [iIdx, jIdx];
+                    }
+                }
+                return path;
+            }
+
+            const idxPath = reconstruct(i, j);
+            if (!idxPath || idxPath.length < 2) return;
+            const labelToNodeId = {};
+            (window.graphEditor?.nodes || []).forEach(n => labelToNodeId[n.label] = n.id);
+            const nodeIds = idxPath.map(k => labelToNodeId[labels[k]]).filter(x=>x!==undefined);
+            for (let k = 0; k < nodeIds.length - 1; k++) {
+                const a = nodeIds[k];
+                const b = nodeIds[k+1];
+                const edge = (window.graphEditor?.edges || []).find(e => (e.source == a && e.target == b) || (!window.graphEditor.isDirectedGraph && e.source == b && e.target == a));
+                if (edge) {
+                    const g = document.querySelector(`.edge-weight-group[data-id="${edge.id}"]`);
+                    if (g) g.classList.add('highlight-edge');
+                }
+                const nodeEl = document.querySelector(`.node-group[data-id="${a}"]`);
+                if (nodeEl) nodeEl.classList.add('highlight');
+                const nodeEl2 = document.querySelector(`.node-group[data-id="${b}"]`);
+                if (nodeEl2) nodeEl2.classList.add('highlight');
+            }
+        };
+
+        function buildGraphDto() {
+            if (!window.graphEditor) return null;
+            const nodes = window.graphEditor.nodes.map(n => ({ id: n.id.toString(), label: n.label }));
+            const edges = window.graphEditor.edges.map(e => ({
+                id: e.id.toString(),
+                from: e.source.toString(),
+                to: e.target.toString(),
+                weight: (e.weight !== null && e.weight !== undefined) ? e.weight : 1,
+                hasWeight: e.weight !== null && e.weight !== undefined
+            }));
+            return { nodes, edges, directed: !!window.graphEditor.isDirectedGraph };
+        }
+
+        function populateNodeSelects() {
+            const nodes = (window.graphEditor && window.graphEditor.nodes) ? window.graphEditor.nodes : [];
+            const selects = ['dijkstra-start','dijkstra-end','dfs-start','bfs-start'];
+            selects.forEach(id => {
+                const sel = document.getElementById(id);
+                if (!sel) return;
+                const current = sel.value;
+                sel.innerHTML = '<option value="">—</option>';
+                nodes.forEach(n => {
+                    const opt = document.createElement('option');
+                    opt.value = n.id.toString();
+                    opt.text = n.label;
+                    sel.appendChild(opt);
+                });
+                if (current) sel.value = current;
+            });
+        }
+
+        async function analyzeAll() {
+            clearHighlights();
+            const dto = buildGraphDto();
+            if (!dto) return alert('Граф відсутній або редактор не готовий');
+            try {
+                document.getElementById('btn-analyze').disabled = true;
+                const resp = await fetch('/api/analysis/metrics', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ graphData: JSON.stringify(dto) })
+                });
+                if (!resp.ok) {
+                    const err = await resp.json().catch(() => null);
+                    throw new Error(err?.message || 'Помилка аналізу');
+                }
+                const res = await resp.json();
+                renderAnalysis(res);
+            } catch (err) {
+                alert(err.message || err);
+            } finally {
+                document.getElementById('btn-analyze').disabled = false;
+            }
+        }
+
+        function renderAnalysis(data) {
+            const container = document.getElementById('stats-container');
+            if (!data) { container.innerHTML = '<div class="text-muted">Немає даних</div>'; return; }
+
+            let html = '';
+
+            // Connectivity
+            html += '<div class="analysis-section">';
+            html += `<h6>Кількість компонентів зв’язності</h6><div class="value">${data.connectivity?.components ?? '—'}</div>`;
+            html += `<h6>Число вершинної зв’язності K(G)</h6><div class="value">${data.connectivity?.vertexConnectivity ?? '—'}</div>`;
+            html += `<h6>Число реберної зв’язності Λ(G)</h6><div class="value">${data.connectivity?.edgeConnectivity ?? '—'}</div>`;
+            html += '</div>';
+
+            // Eulerian structures
+            html += '<div class="analysis-section">';
+            html += '<h6>Ейлерові структури</h6>';
+            html += `<div class="text-muted">${data.eulerianStructures?.length ? data.eulerianStructures.join(', ') : 'Ейлерових структур не знайдено'}</div>`;
+            html += '</div>';
+
+            // Hamiltonian structures
+            html += '<div class="analysis-section">';
+            html += '<h6>Гамільтонові структури</h6>';
+            html += `<div class="text-muted">${data.hamiltonianStructures?.length ? data.hamiltonianStructures.join(', ') : 'Гамільтонових структур не знайдено'}</div>`;
+            html += '</div>';
+
+            // Numerical invariants
+            html += '<div class="analysis-section">';
+            html += '<h6>Числові інваріанти</h6>';
+            html += `<h6>Хроматичне число X(G)</h6><div class="value">${data.chromaticNumber ?? '—'}</div>`;
+            html += '</div>';
+
+            // Adjacency matrix
+            if (data.adjacencyMatrix && data.labels) {
+                html += '<div class="analysis-section">';
+                html += '<h6>Матриця суміжності</h6>';
+                html += buildMatrixTable(data.adjacencyMatrix, data.labels, false);
+                html += '</div>';
+            }
+
+            // Incidence matrix
+            if (data.incidenceMatrix && data.labels) {
+                html += '<div class="analysis-section">';
+                html += '<h6>Матриця інцидентності</h6>';
+                html += buildMatrixTable(data.incidenceMatrix, data.labels, false);
+                html += '</div>';
+            }
+
+            container.innerHTML = html;
+        }
+
+        function buildMatrixTable(matrix, labels, clickable) {
+            if (!labels || !Array.isArray(labels)) return '<div class="text-muted">Немає даних для матриці</div>';
+            let html = '<table class="matrix-table"><thead><tr><th>V \ E</th>';
+            labels.forEach(label => html += `<th>${label}</th>`);
+            html += '</tr></thead><tbody>';
+            for (let i = 0; i < matrix.length; i++) {
+                html += '<tr>';
+                html += `<th>${labels[i]}</th>`;
+                for (let j = 0; j < matrix[i].length; j++) {
+                    const value = matrix[i][j] || '0';
+                    html += `<td>${value}</td>`;
+                }
+                html += '</tr>';
+            }
+            html += '</tbody></table>';
+            return html;
+        }
+
+        // common clearHighlights function
+        function clearHighlights() {
+            document.querySelectorAll('.node-group.highlight').forEach(el => el.classList.remove('highlight'));
+            document.querySelectorAll('.edge-weight-group.highlight-edge').forEach(el => el.classList.remove('highlight-edge'));
+            const result = document.getElementById('algorithm-result'); if (result) result.innerHTML = '';
+        }
+
+        // specific highlight function for edges
+        function highlightPathByEdges(edgeIds) {
+            clearHighlights();
+            edgeIds.forEach(id => {
+                const g = document.querySelector(`.edge-weight-group[data-id="${id}"]`);
+                if (g) g.classList.add('highlight-edge');
+            });
+            // also highlight nodes by labels if available
+        }
+
+        async function runDijkstra() {
+            clearHighlights();
+            const start = document.getElementById('dijkstra-start').value;
+            const end = document.getElementById('dijkstra-end').value;
+            if (!start || !end) return alert('Виберіть початкову та кінцеву вершини');
+            const dto = buildGraphDto();
+            try {
+                const resp = await fetch('/api/analysis/dijkstra', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ graphData: JSON.stringify(dto), startId: start.toString(), endId: end.toString() })
+                });
+                if (!resp.ok) { const err = await resp.json().catch(()=>null); throw new Error(err?.message || 'Помилка'); }
+                const r = await resp.json();
+                renderDijkstraResult(r);
+                if (r.pathEdges && r.pathEdges.length) highlightPathByEdges(r.pathEdges);
+            } catch (err) { alert(err.message || err); }
+        }
+
+        async function runDfs() {
+            clearHighlights();
+            const start = document.getElementById('dfs-start').value;
+            if (!start) return alert('Виберіть початкову вершину');
+            const dto = buildGraphDto();
+            try {
+                const resp = await fetch('/api/analysis/dfs', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
+                    body: JSON.stringify({ graphData: JSON.stringify(dto), startId: start.toString() })
+                });
+                if (!resp.ok) { const err = await resp.json().catch(()=>null); throw new Error(err?.message || 'Помилка'); }
+                const r = await resp.json();
+                renderTraversalResult(r, 'dfs-result', 'DFS');
+            } catch (err) { alert(err.message || err); }
+        }
+
+        async function runBfs() {
+            clearHighlights();
+            const start = document.getElementById('bfs-start').value;
+            if (!start) return alert('Виберіть початкову вершину');
+            const dto = buildGraphDto();
+            try {
+                const resp = await fetch('/api/analysis/bfs', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
+                    body: JSON.stringify({ graphData: JSON.stringify(dto), startId: start.toString() })
+                });
+                if (!resp.ok) { const err = await resp.json().catch(()=>null); throw new Error(err?.message || 'Помилка'); }
+                const r = await resp.json();
+                renderTraversalResult(r, 'bfs-result', 'BFS');
+            } catch (err) { alert(err.message || err); }
+        }
+
+        // Floyd-Warshall UI logic
+        let floydResult = null;
+        let floydCurrentStep = 0;
+        let lastFloydHighlighted = null; // {r,c}
+
+        async function runFloydWarshall() {
+            clearHighlights();
+            lastFloydHighlighted = null;
+            const dto = buildGraphDto();
+            if (!dto) return alert('Граф відсутній або редактор не готовий');
+            try {
+                document.getElementById('run-floyd').disabled = true;
+                const resp = await fetch('/api/analysis/floyd-warshall', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
+                    body: JSON.stringify({ graphData: JSON.stringify(dto) })
+                });
+                if (!resp.ok) { const err = await resp.json().catch(()=>null); throw new Error(err?.message || 'Помилка'); }
+                floydResult = await resp.json();
+                floydCurrentStep = 0;
+                document.getElementById('floyd-container').style.display = 'block';
+                renderFloydStep(floydCurrentStep);
+            } catch (err) { alert(err.message || err); }
+            finally { document.getElementById('run-floyd').disabled = false; }
+        }
+
+        function renderFloydStep(idx) {
+            if (!floydResult || !floydResult.steps || floydResult.steps.length === 0) return;
+            const step = floydResult.steps[idx];
+            const labels = floydResult.labels || [];
+            document.getElementById('floyd-step-index').innerText = idx;
+            document.getElementById('floyd-step-index-2').innerText = idx;
+
+            // set title: initialization or "Крок N (через vK)"
+            if (idx === 0) {
+                document.getElementById('floyd-step-title').innerText = 'Ініціалізація (W)';
+            } else {
+                const kIndex = idx - 1; // steps[1] corresponds to k=0
+                const viaLabel = labels[kIndex] || `v${kIndex}`;
+                document.getElementById('floyd-step-title').innerText = `Крок ${idx} (через ${viaLabel})`;
+            }
+
+            // render distance matrix
+            const distHtml = window.buildMatrixTable(step.distanceMatrix, labels, true);
+            document.getElementById('floyd-distance').innerHTML = distHtml;
+            // render predecessor matrix
+            const predHtml = window.buildMatrixTable(step.predecessorMatrix, labels, false);
+            document.getElementById('floyd-predecessor').innerHTML = predHtml;
+
+            // attach click handlers to distance cells (toggle highlighting)
+            document.querySelectorAll('#floyd-distance .matrix-cell.clickable').forEach(cell => {
+                cell.addEventListener('click', (e) => {
+                    const r = parseInt(cell.getAttribute('data-row'));
+                    const c = parseInt(cell.getAttribute('data-col'));
+                    // toggle: if same cell clicked twice -> clear
+                    if (lastFloydHighlighted && lastFloydHighlighted.r === r && lastFloydHighlighted.c === c) {
+                        clearHighlights();
+                        lastFloydHighlighted = null;
+                        return;
+                    }
+                    lastFloydHighlighted = { r, c };
+                    highlightPathFromFloyd(r, c);
+                });
+            });
+
+            // update prev/next button disabled state
+            const prevBtn = document.getElementById('floyd-prev');
+            const nextBtn = document.getElementById('floyd-next');
+            if (prevBtn) prevBtn.disabled = (idx <= 0);
+            if (nextBtn) nextBtn.disabled = (floydResult && idx >= floydResult.steps.length - 1);
+        }
+
+        document.getElementById('run-floyd')?.addEventListener('click', runFloydWarshall);
+        document.getElementById('floyd-prev')?.addEventListener('click', () => { if (floydCurrentStep>0) { floydCurrentStep--; renderFloydStep(floydCurrentStep); } });
+        document.getElementById('floyd-next')?.addEventListener('click', () => { if (floydResult && floydCurrentStep < floydResult.steps.length-1) { floydCurrentStep++; renderFloydStep(floydCurrentStep); } });
+        document.querySelectorAll('[id="floyd-clear-highlights"]').forEach(btn => {
+                btn.addEventListener('click', () => { 
+                    clearHighlights(); 
+                    lastFloydHighlighted = null; 
+                });
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // initialize from server data
             if (window.graphEditor && initialData && initialData.nodes) {
                 window.graphEditor.nodes = initialData.nodes;
                 window.graphEditor.edges = initialData.edges || [];
@@ -136,7 +607,16 @@
                 window.graphEditor.render();
             }
 
-            // Робоча кнопка "Зберегти проєкт"
+            // populate selects periodically (keeps UI in sync with canvas)
+            populateNodeSelects();
+            setInterval(populateNodeSelects, 800);
+
+            document.getElementById('btn-analyze').addEventListener('click', analyzeAll);
+            document.getElementById('run-dijkstra').addEventListener('click', runDijkstra);
+            document.getElementById('run-dfs').addEventListener('click', runDfs);
+            document.getElementById('run-bfs').addEventListener('click', runBfs);
+
+            // Save project handler
             document.getElementById('btn-save-project').addEventListener('click', async () => {
                 if (!window.graphEditor) return;
 

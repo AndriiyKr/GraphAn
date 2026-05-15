@@ -1,36 +1,45 @@
-﻿@{
-    ViewData["Title"] = "Вхід";
+@{
+    ViewData["Title"] = "Вхід у систему";
 }
 
-<div class="container mt-5" style="max-width: 450px;">
-    <div class="card shadow">
-        <div class="card-header bg-primary text-white">
-            <h4 class="mb-0">Вхід у систему</h4>
-        </div>
-        <div class="card-body">
-            <form id="loginForm">
-                <div class="mb-3">
-                    <label for="login" class="form-label">Email або ім'я користувача</label>
-                    <input type="text" class="form-control" id="login" name="login" required autofocus>
-                    <div class="invalid-feedback">Будь ласка, введіть логін.</div>
+<div class="d-flex align-items-center justify-content-center" style="min-height: calc(100vh - 100px);">
+    <div class="card shadow-sm border-0 rounded-4" style="width: 100%; max-width: 420px; background-color: #ffffff;">
+        <div class="card-body p-4 p-md-5">
+            <div class="text-center mb-4">
+                <div class="d-inline-flex align-items-center justify-content-center bg-primary text-white rounded-circle mb-3 shadow-sm" style="width: 65px; height: 65px;">
+                    <i class="fa-solid fa-user-lock fa-2x"></i>
                 </div>
-                <div class="mb-3">
-                    <label for="password" class="form-label">Пароль</label>
-                    <input type="password" class="form-control" id="password" name="password" required>
-                    <div class="invalid-feedback">Введіть пароль.</div>
+                <h3 class="fw-bold text-dark mb-1">З поверненням!</h3>
+                <p class="text-muted small">Увійдіть до свого облікового запису GraphAn</p>
+            </div>
+
+            <form id="loginForm" method="post">
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control rounded-3" id="loginInput" name="Login" placeholder="name@example.com" required>
+                    <label for="loginInput"><i class="fa-solid fa-envelope me-2 text-muted"></i>Email або Логін</label>
                 </div>
-                <div class="mb-3 form-check">
-                    <input type="checkbox" class="form-check-input" id="rememberMe" name="rememberMe">
-                    <label class="form-check-label" for="rememberMe">Запам'ятати мене</label>
+
+                <div class="form-floating mb-3">
+                    <input type="password" class="form-control rounded-3" id="passwordInput" name="Password" placeholder="Пароль" required>
+                    <label for="passwordInput"><i class="fa-solid fa-lock me-2 text-muted"></i>Пароль</label>
                 </div>
-                <button type="submit" class="btn btn-primary w-100">Увійти</button>
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="rememberMe" name="RememberMe">
+                        <label class="form-check-label small text-muted" for="rememberMe">Запам'ятати мене</label>
+                    </div>
+                    <a href="/Home/ForgotPassword" class="small text-primary text-decoration-none fw-bold">Забули пароль?</a>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 py-3 rounded-3 fw-bold shadow-sm mb-3">
+                    УВІЙТИ
+                </button>
             </form>
 
-            <div id="message" class="mt-3"></div>
-            <hr />
             <div class="text-center">
-                <small>Немає акаунту? <a href="/home/register">Зареєструватися</a></small><br />
-                <small><a href="/home/forgot-password">Забули пароль?</a></small>
+                <span class="text-muted small">Немає акаунту?</span>
+                <a href="/Home/Register" class="text-primary text-decoration-none fw-bold small">Зареєструватися</a>
             </div>
         </div>
     </div>
@@ -38,52 +47,40 @@
 
 @section Scripts {
     <script>
-        const form = document.getElementById('loginForm');
-        const messageDiv = document.getElementById('message');
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault(); // Зупиняємо стандартну відправку форми
 
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
+            const btn = this.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Зачекайте...';
+            btn.disabled = true;
 
-            // Отримання даних
-            const login = document.getElementById('login').value.trim();
-            const password = document.getElementById('password').value;
-            const rememberMe = document.getElementById('rememberMe').checked;
-
-            if (!login || !password) {
-                showMessage('Заповніть всі поля.', 'danger');
-                return;
-            }
+            const data = {
+                login: document.getElementById('loginInput').value,
+                password: document.getElementById('passwordInput').value,
+                rememberMe: document.getElementById('rememberMe').checked
+            };
 
             try {
                 const response = await fetch('/api/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ login, password, rememberMe })
+                    body: JSON.stringify(data)
                 });
-                const data = await response.json();
+                const result = await response.json();
 
                 if (response.ok) {
-                    showMessage('Вхід виконано! Перенаправлення...', 'success');
-                    setTimeout(() => {
-                        window.location.href = '/home/projects';
-                    }, 1000);
+                    window.location.href = '/Home/Projects'; // Перехід до проєктів
                 } else {
-                    showMessage(data.message || 'Невірний логін або пароль.', 'danger');
+                    alert(result.message || 'Невірний логін або пароль');
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
                 }
-            } catch (error) {
-                showMessage('Помилка з\'єднання з сервером.', 'danger');
+            } catch (err) {
+                alert('Помилка з\'єднання з сервером');
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             }
         });
-
-        function showMessage(msg, type) {
-            messageDiv.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
-                                        ${msg}
-                                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                                    </div>`;
-            setTimeout(() => {
-                const alert = messageDiv.querySelector('.alert');
-                if (alert) alert.classList.remove('show');
-            }, 5000);
-        }
     </script>
 }

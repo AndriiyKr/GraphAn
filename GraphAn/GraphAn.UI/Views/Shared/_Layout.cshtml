@@ -171,21 +171,40 @@
         </footer>
     }
 
-    <form id="logoutForm" action="/api/auth/logout" method="post" class="d-none">
+    <form id="logoutForm" class="d-none">
         @Html.AntiForgeryToken()
     </form>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
     <script>
-        document.getElementById('logoutNavBtn')?.addEventListener('click', function (e) {
+        // Асинхронний обробник безпечного та швидкого виходу без перезавантажень чи виводу JSON
+        document.getElementById('logoutNavBtn')?.addEventListener('click', async function (e) {
             e.preventDefault();
-            const f = document.getElementById('logoutForm');
-            if (f) f.submit();
-            else fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' }).then(() => window.location = '/');
+
+            // Дістаємо токен захисту з прихованої форми для успішної валідації на сервері
+            const token = document.querySelector('#logoutForm input[name="__RequestVerificationToken"]')?.value;
+
+            try {
+                // Виконуємо запит у фоновому режимі
+                await fetch('/api/auth/logout', {
+                    method: 'POST',
+                    headers: {
+                        'RequestVerificationToken': token || ''
+                    },
+                    credentials: 'same-origin'
+                });
+            } catch (err) {
+                console.error('Помилка запиту виходу:', err);
+            } finally {
+                // У будь-якому випадку (навіть якщо мережа обірвалась) примусово скеровуємо на головну сторінку
+                window.location.href = '/';
+            }
         });
     </script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

@@ -12,7 +12,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/GraphAn.styles.css" asp-append-version="true" />
+
+    <link rel="stylesheet" href="~/GraphAn.UI.styles.css" asp-append-version="true" />
+
     @if (!isCanvas)
     {
         <link rel="stylesheet" href="~/css/site-pages.css" asp-append-version="true" />
@@ -27,7 +29,6 @@
             letter-spacing: 1px;
         }
 
-        /* Примусове ідеальне вирівнювання тексту та іконок по центру для всіх кнопок */
         .btn {
             display: inline-flex;
             align-items: center;
@@ -36,7 +37,6 @@
             gap: 6px;
         }
 
-        /* Сучасні стилі для елементів навігації хедера */
         .navbar-custom {
             background-color: #ffffff !important;
             transition: all 0.3s ease;
@@ -67,7 +67,6 @@
                 background-color: #f8f9fa;
             }
 
-        /* Стильний бадж для відображення імені поточного користувача */
         .user-profile-badge {
             background-color: #f1f3f5;
             padding: 6px 14px;
@@ -104,41 +103,39 @@
 
     @await RenderSectionAsync("Styles", required: false)
 </head>
-<body class="@(isCanvas ? "vh-100 vw-100 d-flex flex-column overflow-hidden bg-white" : "page-with-footer d-flex flex-column min-vh-100 bg-light")">
+<body class="@(isCanvas ? "vh-100 w-100 d-flex flex-column overflow-hidden bg-white" : "page-with-footer d-flex flex-column min-vh-100 bg-light")">
 
     <header class="@(isCanvas ? "w-100 flex-shrink-0" : "")">
-        <nav class="navbar navbar-expand-md navbar-light bg-white border-bottom shadow-sm navbar-custom sticky-top @(isCanvas ? "py-2" : "py-3")">
-            <div class="@(isCanvas ? "container-fluid px-4" : "container")">
+        <nav class="navbar navbar-expand-md navbar-light bg-white border-bottom shadow-sm navbar-custom sticky-top @(isCanvas ? "py-2 px-3 px-md-4 px-xl-5" : "py-3")">
 
+            <div class="@(isCanvas ? "d-flex align-items-center justify-content-between w-100" : "container")">
                 @if (isCanvas)
                 {
-                    <div class="d-flex align-items-center justify-content-between w-100">
-                        <div class="d-flex align-items-center gap-3">
-                            <a class="navbar-brand navbar-brand-custom text-primary d-flex align-items-center m-0" asp-controller="Home" asp-action="Index" title="На головну">
-                                <i class="fa-solid fa-circle-nodes fs-4"></i>
-                            </a>
-                            <div class="vr text-muted opacity-25 my-1" style="height: 20px;"></div>
-                            <a asp-controller="Home" asp-action="Projects" class="btn btn-light btn-sm rounded-3 px-3 py-2 text-secondary fw-semibold border-0 bg-opacity-70">
-                                <i class="fa-solid fa-arrow-left-long me-1"></i> <span class="d-none d-sm-inline">До проєктів</span>
-                            </a>
-                            <div class="vr text-muted opacity-25 my-1 d-none d-md-block" style="height: 20px;"></div>
-                            <span class="fw-bold text-dark d-none d-md-inline text-truncate" style="max-width: 280px;" title="@ViewData["Title"]">
-                                <i class="fa-regular fa-file-code text-muted me-2"></i>@ViewData["Title"]
-                            </span>
-                        </div>
+                    <div class="d-flex align-items-center gap-3">
+                        <a class="navbar-brand navbar-brand-custom text-primary d-flex align-items-center m-0" asp-controller="Home" asp-action="Index" title="На головну">
+                            <i class="fa-solid fa-circle-nodes fs-4"></i>
+                        </a>
+                        <div class="vr text-muted opacity-25 my-1" style="height: 20px;"></div>
+                        <a asp-controller="Home" asp-action="Projects" class="btn btn-light btn-sm rounded-3 px-3 py-2 text-secondary fw-semibold border-0 bg-opacity-70">
+                            <i class="fa-solid fa-arrow-left-long me-1"></i> <span class="d-none d-sm-inline">До проєктів</span>
+                        </a>
+                        <div class="vr text-muted opacity-25 my-1 d-none d-md-block" style="height: 20px;"></div>
+                        <span class="fw-bold text-dark d-none d-md-inline text-truncate" style="max-width: 280px;" title="@ViewData["Title"]">
+                            <i class="fa-regular fa-file-code text-muted me-2"></i>@ViewData["Title"]
+                        </span>
+                    </div>
 
-                        <div class="d-flex align-items-center gap-4">
-                            @if (User.Identity?.IsAuthenticated == true && !String.IsNullOrWhiteSpace(User.Identity?.Name))
-                            {
-                                <div class="user-profile-badge border bg-light bg-opacity-50 px-3 py-1.5 rounded-pill shadow-none" style="font-size: 13px;">
-                                    <i class="fa-solid fa-circle-user text-primary fs-5"></i>
-                                    <span class="text-dark">@User.Identity.Name</span>
-                                </div>
-                            }
-                            <button id="logoutNavBtn" type="button" class="btn btn-link text-danger text-decoration-none fw-bold text-uppercase p-0 m-0 border-0 bg-transparent" style="font-size: 12px; letter-spacing: 0.5px;">
-                                <i class="fa-solid fa-arrow-right-from-bracket"></i> <span class="d-none d-sm-inline">Вийти</span>
-                            </button>
-                        </div>
+                    <div class="d-flex align-items-center gap-4">
+                        @if (User.Identity?.IsAuthenticated == true && !String.IsNullOrWhiteSpace(User.Identity?.Name))
+                        {
+                            <div class="user-profile-badge border bg-light bg-opacity-50 px-3 py-1.5 rounded-pill shadow-none" style="font-size: 13px;">
+                                <i class="fa-solid fa-circle-user text-primary fs-5"></i>
+                                <span class="text-dark">@User.Identity.Name</span>
+                            </div>
+                        }
+                        <button id="logoutNavBtn" type="button" class="btn btn-link text-danger text-decoration-none fw-bold text-uppercase p-0 m-0 border-0 bg-transparent" style="font-size: 12px; letter-spacing: 0.5px;">
+                            <i class="fa-solid fa-arrow-right-from-bracket"></i> <span class="d-none d-sm-inline">Вийти</span>
+                        </button>
                     </div>
                 }
                 else

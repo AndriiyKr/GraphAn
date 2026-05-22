@@ -13,13 +13,28 @@
         <p class="lead text-muted mx-auto mb-4" style="max-width: 680px;">
             Потужний вебзастосунок, який поєднує гнучкий графічний редактор для побудови складних конфігурацій графів та автоматизований аналітичний модуль для обчислення метрик і класичних алгоритмів.
         </p>
-        <div class="d-flex justify-content-center gap-3">
-            <a href="/Home/Register" class="btn btn-primary btn-lg px-4 py-3 rounded-3 fw-bold shadow-sm transition-all">
-                Зареєструватись <i class="fa-solid fa-arrow-right ms-2 small"></i>
-            </a>
-            <a href="/Home/Login" class="btn btn-outline-secondary btn-lg px-4 py-3 rounded-3 fw-bold transition-all">
-                Увійти до профілю
-            </a>
+
+        <div class="d-flex flex-column align-items-center justify-content-center gap-3 mt-4">
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <h5 class="fw-bold text-dark mb-2">
+                    Раді бачити вас знову, <span class="text-primary">@User.Identity.Name</span>! 👋
+                </h5>
+                <a asp-controller="Home" asp-action="Projects" class="btn btn-primary btn-lg px-5 py-3 rounded-3 fw-bold shadow-sm transition-all">
+                    Перейти до моїх проєктів <i class="fa-solid fa-arrow-right ms-2 small"></i>
+                </a>
+            }
+            else
+            {
+                <div class="d-flex justify-content-center gap-3 flex-wrap">
+                    <a asp-controller="Home" asp-action="Register" class="btn btn-primary btn-lg px-4 py-3 rounded-3 fw-bold shadow-sm transition-all">
+                        Зареєструватись <i class="fa-solid fa-arrow-right ms-2 small"></i>
+                    </a>
+                    <a asp-controller="Home" asp-action="Login" class="btn btn-outline-secondary btn-lg px-4 py-3 rounded-3 fw-bold transition-all">
+                        Увійти
+                    </a>
+                </div>
+            }
         </div>
     </div>
 </div>
@@ -85,13 +100,26 @@
     <div class="bg-dark text-white p-5 rounded-4 text-center shadow position-relative overflow-hidden">
         <div class="position-absolute top-0 start-0 w-100 h-100 opacity-10" style="background: linear-gradient(135deg, #0d6efd, transparent); pointer-events: none;"></div>
         <div class="position-relative z-1 py-3">
-            <h2 class="fw-bold mb-3">Готові оптимізувати роботу з графами?</h2>
-            <p class="text-muted lead mx-auto mb-4" style="max-width: 580px; color: #adb5bd !important;">
-                Приєднуйтесь до платформи та створюйте свої інтерактивні проєкти для точного розрахунку та автоматизованої візуалізації вже сьогодні.
-            </p>
-            <a href="/Home/Register" class="btn btn-light btn-lg px-5 py-3 rounded-3 fw-bold shadow-sm transition-all">
-                Спробувати
-            </a>
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <h2 class="fw-bold mb-3">Продовжуйте працювати!</h2>
+                <p class="text-muted lead mx-auto mb-4" style="max-width: 580px; color: #adb5bd !important;">
+                    Ваші проєкти чекають. Відкрийте панель керування, щоб продовжити розрахунки та візуалізацію.
+                </p>
+                <a asp-controller="Home" asp-action="Projects" class="btn btn-light btn-lg px-5 py-3 rounded-3 fw-bold shadow-sm transition-all">
+                    <i class="fa-solid fa-folder-open me-2"></i> Мої проєкти
+                </a>
+            }
+            else
+            {
+                <h2 class="fw-bold mb-3">Готові оптимізувати роботу з графами?</h2>
+                <p class="text-muted lead mx-auto mb-4" style="max-width: 580px; color: #adb5bd !important;">
+                    Приєднуйтесь до платформи та створюйте свої інтерактивні проєкти для точного розрахунку та автоматизованої візуалізації вже сьогодні.
+                </p>
+                <a asp-controller="Home" asp-action="Register" class="btn btn-light btn-lg px-5 py-3 rounded-3 fw-bold shadow-sm transition-all">
+                    Спробувати
+                </a>
+            }
         </div>
     </div>
 </div>
@@ -122,6 +150,5 @@
         .transition-all {
             transition: all 0.2s ease-in-out;
         }
-
     </style>
 }

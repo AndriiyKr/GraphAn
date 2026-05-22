@@ -1,16 +1,143 @@
-﻿@{
-    ViewData["Title"] = "Помилка";
+@{
+    // Отримуємо код помилки, за замовчуванням вважаємо її внутрішньою помилкою сервера (500)
+    var errorCode = ViewData["ErrorCode"] as int? ?? 500;
+    ViewData["Title"] = $"Помилка {errorCode}";
+
+    // Базові значення для невідомого коду помилки
+    string title = "Невідома помилка";
+    string description = "Сталася непередбачувана помилка під час обробки вашого запиту.";
+    string icon = "fa-triangle-exclamation";
+    string colorClass = "text-danger";
+    string bgClass = "bg-danger";
+
+    // Словник інструкцій
+    var instructions = new List<string> { "Спробуйте оновити сторінку через деякий час." };
+
+    switch (errorCode)
+    {
+        case 401:
+            title = "Необхідна автентифікація";
+            description = "Ви намагаєтеся отримати доступ до захищеної зони, але ваш поточний сеанс не є авторизованим.";
+            icon = "fa-shield-lock";
+            colorClass = "text-warning";
+            bgClass = "bg-warning";
+            instructions = new List<string>
+            {
+                "Натисніть кнопку нижче та увійдіть у свій обліковий запис GraphAn.",
+                "Переконайтеся, що у вашому браузері увімкнені файли cookies.",
+                "Якщо ви тільки-но зареєструвалися, перевірте пошту та підтвердіть ваш Email за допомогою OTP коду."
+            };
+            break;
+
+        case 403:
+            title = "Доступ заборонено";
+            description = "У вас немає достатніх прав чи дозволів для перегляду цієї сторінки, проєкту або виконання цієї операції.";
+            icon = "fa-user-lock";
+            colorClass = "text-danger";
+            bgClass = "bg-danger";
+            instructions = new List<string>
+            {
+                "Перевірте, чи увійшли ви саме під тим акаунтом, якому належить цей проєкт графів.",
+                "Не намагайтеся вручну підміняти ідентифікатори (GUID) проєктів в адресному рядку браузера.",
+                "Якщо ви вважаєте, що це помилка системи — зверніться до адміністратора."
+            };
+            break;
+
+        case 404:
+            title = "Сторінку не знайдено";
+            description = "Запитуваний ресурс або проєкт графа не існує, був безповоротно видалений розробником або його адреса змінилася.";
+            icon = "fa-compass-drafting";
+            colorClass = "text-primary";
+            bgClass = "bg-primary";
+            instructions = new List<string>
+            {
+                "Ретельно перевірте правильність написання URL-адреси в рядку браузера.",
+                "Якщо ви перейшли за посиланням на проєкт і бачите цю помилку — ймовірно, цей проєкт був видалений власником.",
+                "Поверніться на головну сторінку або в розділ ваших особистих проєктів."
+            };
+            break;
+
+        case 500:
+        case 501:
+        case 502:
+            title = "Внутрішня помилка сервера";
+            description = "Наші сервери зіткнулися з непередбачуваною технічною проблемою під час обчислення метрик або збереження графа.";
+            icon = "fa-bug";
+            colorClass = "text-danger";
+            bgClass = "bg-danger";
+            instructions = new List<string>
+            {
+                "Спробуйте перезавантажити сторінку (комбінація клавіш Ctrl + F5).",
+                "Не хвилюйтеся, ваші локальні дані в редакторі графа захищені, спробуйте повторити операцію пізніше.",
+                "Ми вже зафіксували цю помилку в логах сервера та працюємо над її усуненням."
+            };
+            break;
+    }
 }
 
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8 text-center">
-            <h1 class="display-1 text-danger">😵</h1>
-            <h1 class="display-4 text-danger">Помилка</h1>
-            <p class="lead">Під час обробки вашого запиту сталася помилка.</p>
-            <hr class="my-4" />
-            <p>Будь ласка, спробуйте пізніше або зв'яжіться з адміністратором.</p>
-            <a href="/" class="btn btn-primary">На головну</a>
+<div class="d-flex align-items-center justify-content-center py-5" style="min-height: calc(100vh - 120px);">
+    <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white text-center" style="width: 100%; max-width: 580px;">
+        <div class="card-body">
+
+            <div class="position-relative d-inline-block mb-4">
+                <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mx-auto" style="width: 110px; height: 110px;">
+                    <i class="fa-solid @icon fa-3x @colorClass"></i>
+                </div>
+                <span class="position-absolute bottom-0 end-0 badge rounded-pill @bgClass px-2 py-1 small shadow-sm text-white fw-bold" style="font-size: 14px;">
+                    HTTP @errorCode
+                </span>
+            </div>
+
+            <h2 class="fw-bold text-dark mb-2">@title</h2>
+            <p class="text-muted small mx-auto mb-4" style="max-width: 440px;">@description</p>
+
+            <div class="text-start bg-light rounded-4 p-4 mb-4 border border-light">
+                <h6 class="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-rectangle-list text-muted"></i> Рекомендовані дії:
+                </h6>
+                <ul class="list-unstyled d-flex flex-column gap-2 small text-muted mb-0">
+                    @foreach (var instruction in instructions)
+                    {
+                        <li class="d-flex align-items-start gap-2">
+                            <i class="fa-solid fa-circle-arrow-right mt-1 text-primary opacity-50" style="font-size: 11px;"></i>
+                            <span>@instruction</span>
+                        </li>
+                    }
+                </ul>
+            </div>
+
+            <div class="d-flex justify-content-center gap-2 pt-2">
+                @if (errorCode == 401)
+                {
+                    <a asp-controller="Home" asp-action="Login" class="btn btn-primary rounded-3 px-4 py-2.5 fw-bold shadow-sm transition-all">
+                        <i class="fa-solid fa-right-to-bracket me-2 small"></i> Авторизуватися
+                    </a>
+                }
+                else if (User.Identity?.IsAuthenticated == true)
+                {
+                    <a asp-controller="Home" asp-action="Projects" class="btn btn-primary rounded-3 px-4 py-2.5 fw-bold shadow-sm transition-all">
+                        <i class="fa-solid fa-folder-tree me-2 small"></i> До моїх проєктів
+                    </a>
+                }
+                else
+                {
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-primary rounded-3 px-4 py-2.5 fw-bold shadow-sm transition-all">
+                        <i class="fa-solid fa-house me-2 small"></i> На головну
+                    </a>
+                }
+                <button onclick="window.history.back()" class="btn btn-outline-secondary rounded-3 px-4 py-2.5 fw-bold transition-all">
+                    <i class="fa-solid fa-rotate-left me-2 small"></i> Назад
+                </button>
+            </div>
+
         </div>
     </div>
 </div>
+
+@section Styles {
+    <style>
+        .transition-all {
+            transition: all 0.2s ease-in-out;
+        }
+    </style>
+}

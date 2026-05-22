@@ -1,32 +1,78 @@
-﻿@{
+@{
     var isCanvas = ViewData["IsCanvasPage"] as bool? ?? false;
 }
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uk">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - GraphAn</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/GraphAn.styles.css" asp-append-version="true" />
     @if (!isCanvas)
     {
         <link rel="stylesheet" href="~/css/site-pages.css" asp-append-version="true" />
     }
+
+    <style>
+        .tracking-wide {
+            letter-spacing: 0.5px;
+        }
+
+        .tracking-wider {
+            letter-spacing: 1px;
+        }
+
+        /* Примусове ідеальне вирівнювання тексту та іконок по центру для всіх кнопок */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .modern-footer {
+            background-color: #ffffff;
+        }
+
+        .footer-link {
+            transition: color 0.2s ease;
+        }
+
+            .footer-link:hover {
+                color: #0d6efd !important;
+            }
+
+        .footer-icon-link {
+            transition: transform 0.2s ease, color 0.2s ease;
+        }
+
+            .footer-icon-link:hover {
+                color: #24292e !important;
+                transform: scale(1.1);
+            }
+    </style>
+
     @await RenderSectionAsync("Styles", required: false)
 </head>
-<body class="@(isCanvas ? "" : "page-with-footer")">
+<body class="@(isCanvas ? "" : "page-with-footer d-flex flex-column min-vh-100 bg-light")">
+
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-controller="Home" asp-action="Index">GraphAn</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3 py-3">
+            <div class="container">
+                <a class="navbar-brand fw-bold text-primary d-flex align-items-center gap-2" asp-controller="Home" asp-action="Index">
+                    <i class="fa-solid fa-circle-nodes"></i> GraphAn
+                </a>
+                <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between align-items-center">
-                    <ul class="navbar-nav flex-grow-1">
+                    <ul class="navbar-nav flex-grow-1 fw-semibold">
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-controller="Home" asp-action="Index">Головна</a>
                         </li>
@@ -40,25 +86,29 @@
                             <a class="nav-link text-dark" asp-controller="Home" asp-action="Privacy">Конфіденційність</a>
                         </li>
                     </ul>
-                    <ul class="navbar-nav">
+                    <ul class="navbar-nav fw-semibold align-items-center">
                         @if (User.Identity?.IsAuthenticated == true)
                         {
                             <li class="nav-item d-flex align-items-center">
                                 @if (!String.IsNullOrWhiteSpace(User.Identity?.Name))
                                 {
-                                    <span class="navbar-text text-dark me-2">Привіт, @User.Identity.Name!</span>
+                                    <span class="navbar-text text-dark me-3">
+                                        <i class="fa-solid fa-circle-user text-muted me-1"></i> Привіт, @User.Identity.Name!
+                                    </span>
                                 }
 
-                                <button id="logoutNavBtn" type="button" class="btn btn-link nav-link text-dark p-0" style="border:none; background:transparent;">Вийти</button>
+                                <button id="logoutNavBtn" type="button" class="btn btn-outline-danger btn-sm rounded-3 px-3">
+                                    <i class="fa-solid fa-arrow-right-from-bracket me-1"></i> Вийти
+                                </button>
                             </li>
                         }
                         else
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Home" asp-action="Login">Увійти</a>
+                                <a class="nav-link text-dark me-2" asp-controller="Home" asp-action="Login">Увійти</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Home" asp-action="Register">Реєстрація</a>
+                                <a class="btn btn-primary btn-sm rounded-3 px-3" asp-controller="Home" asp-action="Register">Реєстрація</a>
                             </li>
                         }
                     </ul>
@@ -66,7 +116,8 @@
             </div>
         </nav>
     </header>
-    <div class="container">
+
+    <div class="container flex-grow-1">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
@@ -74,14 +125,52 @@
 
     @if (!isCanvas)
     {
-        <footer class="border-top footer text-muted">
+        <footer class="modern-footer border-top py-5 mt-auto">
             <div class="container">
-                &copy; 2026 - GraphAn - <a asp-controller="Home" asp-action="Privacy">Конфіденційність</a>
+                <div class="row g-4 mb-4">
+                    <div class="col-lg-5 col-md-12">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-primary text-white rounded-3 d-flex align-items-center justify-content-center me-2 shadow-sm" style="width: 36px; height: 36px;">
+                                <i class="fa-solid fa-circle-nodes"></i>
+                            </div>
+                            <span class="fw-bold text-dark fs-5 tracking-wide">GraphAn</span>
+                        </div>
+                        <p class="text-muted small mb-0" style="max-width: 360px;">
+                            Сучасний інструмент для інтерактивного моделювання, візуального дослідження та повноцінного аналізу складних графів і мережевих топологій.
+                        </p>
+                    </div>
+
+                    <div class="col-lg-3 col-md-6">
+                        <h6 class="text-uppercase fw-bold text-dark small tracking-wider mb-3">Навігація</h6>
+                        <ul class="list-unstyled mb-0 d-flex flex-column gap-2 small">
+                            <li><a asp-controller="Home" asp-action="Index" class="text-muted text-decoration-none footer-link">Головна сторінка</a></li>
+                            <li><a asp-controller="Home" asp-action="Login" class="text-muted text-decoration-none footer-link">Вхід до системи</a></li>
+                            <li><a asp-controller="Home" asp-action="Register" class="text-muted text-decoration-none footer-link">Реєстрація акаунту</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="col-lg-4 col-md-6">
+                        <h6 class="text-uppercase fw-bold text-dark small tracking-wider mb-3">Підтримка та розробка</h6>
+                        <p class="text-muted small mb-3">
+                            Проєкт розроблено як надійний засіб для автоматизації складних обчислень у теорії графів.
+                        </p>
+                        <div class="d-flex gap-3 text-muted align-items-center">
+                            <a href="https://github.com" target="_blank" class="text-muted fs-5 footer-icon-link"><i class="fa-brands fa-github"></i></a>
+                            <a asp-controller="Home" asp-action="Privacy" class="text-muted small text-decoration-none footer-link">Політика конфіденційності</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border-top pt-4 mt-4 d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
+                    <span class="text-muted small mb-0">&copy; @DateTime.UtcNow.Year GraphAn. Усі права захищено.</span>
+                    <span class="text-muted small d-flex align-items-center gap-1">
+                        <i class="fa-solid fa-code text-primary opacity-50"></i> Faculty of Applied Mathematics and Informatics
+                    </span>
+                </div>
             </div>
         </footer>
     }
 
-    <!-- Hidden logout form used by navbar and page buttons -->
     <form id="logoutForm" action="/api/auth/logout" method="post" class="d-none">
         @Html.AntiForgeryToken()
     </form>
@@ -90,12 +179,11 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script>
-        // Global logout handler: submit hidden form to include antiforgery token if needed
         document.getElementById('logoutNavBtn')?.addEventListener('click', function (e) {
             e.preventDefault();
             const f = document.getElementById('logoutForm');
             if (f) f.submit();
-            else fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' }).then(()=>window.location='/');
+            else fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' }).then(() => window.location = '/');
         });
     </script>
     @await RenderSectionAsync("Scripts", required: false)

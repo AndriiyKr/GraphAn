@@ -1,4 +1,4 @@
-﻿@model GraphAn.UI.ViewModels.ProjectViewModel
+@model GraphAn.UI.ViewModels.ProjectViewModel
 @{
     if (Model != null) { ViewData["Title"] = Model.Name ?? "Новий проєкт"; }
     else { ViewData["Title"] = "Новий проєкт"; }
@@ -7,43 +7,480 @@
     string initialGraphJson = (Model != null && !string.IsNullOrEmpty(Model.GraphData)) ? Model.GraphData : "{}";
     // Отримуємо чисту назву проєкту для збереження
     string cleanProjectName = Model?.Name ?? "Новий проєкт";
-    ViewData["IsCanvasPage"] = true; // mark this page as canvas so layout won't load site-pages.css
+    ViewData["IsCanvasPage"] = true;
+    // mark this page as canvas so layout won't load site-pages.css
 }
 
 @section Styles {
     <link rel="stylesheet" href="~/css/canvas.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <style>
-        /* highlights for algorithm results */
-        .node-group.highlight .graph-node { stroke: #ff8a00; stroke-width: 4px; }
-        .edge-weight-group.highlight-edge .graph-edge { stroke: #ff8a00 !important; stroke-width: 4px !important; }
-        .algorithm-result { font-size: 0.95rem; }
-        .algorithm-result pre { white-space: pre-wrap; }
-        /* Floyd matrices styling */
-        .floyd-matrices { margin-top: 1rem; }
-        .matrix-table { width:100%; border-collapse:collapse; border-radius:12px; overflow:hidden; }
-        .matrix-table th, .matrix-table td { padding: 10px; text-align:center; border-bottom:1px solid rgba(0,0,0,0.04); }
-        .matrix-table thead th { background:#f8fafc; font-weight:700; }
-        .matrix-cell.clickable { cursor:pointer; color:#4f46e5; }
-        .floyd-stepper { background:#0f172a; color:#fff; padding:14px; border-radius:10px; text-align:center; margin-top:12px; }
-        /* DFS/BFS traversal table */
-        .traversal-table { width:100%; border-collapse:collapse; margin-top:12px; }
-        .traversal-table th, .traversal-table td { padding:12px 10px; border-bottom:1px solid rgba(0,0,0,0.04); text-align:center; }
-        .traversal-table thead th { background:#0f172a; color:#fff; font-weight:700; text-align:center; }
-        .traversal-backtrack { color:#94a3b8; font-style:italic; }
-        /* Dijkstra weight box */
-        .weight-box { background:#0f172a; color:#fff; border-radius:12px; padding:24px; text-align:center; margin-top:12px; box-shadow:0 8px 20px rgba(15,23,42,0.08); }
-        .weight-box .label { font-size:0.85rem; color:#9ca3af; text-transform:uppercase; letter-spacing:1px; }
-        .weight-box .value { font-size:40px; font-weight:800; margin-top:6px; }
-        .path-small { color:#374151; margin-top:8px; }
+        /* --- СТИЛІ КАНВАСУ (Залишаємо без змін для логіки підсвічування) --- */
+        .node-group.highlight .graph-node {
+            stroke: #ff8a00;
+            stroke-width: 4px;
+        }
 
-        .analysis-section { margin-top: 20px; }
-        .analysis-section h6 { font-size: 1rem; font-weight: bold; margin-bottom: 10px; }
-        .analysis-section .value { font-size: 1.5rem; font-weight: bold; color: #1d4ed8; }
-        .analysis-section .text-muted { font-style: italic; color: #6b7280; }
-        .matrix-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-        .matrix-table th, .matrix-table td { padding: 12px; text-align: center; border-bottom: 1px solid rgba(0, 0, 0, 0.04); }
-        .matrix-table thead th { background: #f8fafc; font-weight: 700; }
+        .edge-weight-group.highlight-edge .graph-edge {
+            stroke: #ff8a00 !important;
+            stroke-width: 4px !important;
+        }
+
+        .algorithm-result {
+            font-size: 0.95rem;
+        }
+
+            .algorithm-result pre {
+                white-space: pre-wrap;
+            }
+
+        /* =========================================
+                   ГЛОБАЛЬНИЙ РЕДИЗАЙН БІЧНОЇ ПАНЕЛІ
+                   ========================================= */
+
+        .sidebar-panel {
+            background-color: #f8fafc; /* Світлий, приємний фон */
+            border-left: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow-y: auto;
+            padding: 24px;
+            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.04);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+            /* Сучасний скролбар */
+            .sidebar-panel::-webkit-scrollbar {
+                width: 8px;
+            }
+
+            .sidebar-panel::-webkit-scrollbar-track {
+                background: transparent;
+            }
+
+            .sidebar-panel::-webkit-scrollbar-thumb {
+                background: #cbd5e1;
+                border-radius: 10px;
+                border: 2px solid #f8fafc;
+            }
+
+                .sidebar-panel::-webkit-scrollbar-thumb:hover {
+                    background: #94a3b8;
+                }
+
+            /* Заголовки секцій */
+            .sidebar-panel h4 {
+                font-weight: 800;
+                color: #1e293b;
+                letter-spacing: -0.5px;
+            }
+
+        .panel-section-title {
+            font-size: 0.75rem;
+            letter-spacing: 1.5px;
+            color: #64748b;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+        }
+
+            .panel-section-title i {
+                color: #4f46e5;
+            }
+
+        /* Головні кнопки дій */
+        .btn-modern-action {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: #ffffff;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            border: none;
+            border-radius: 12px;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+        }
+
+            .btn-modern-action:hover:not(:disabled) {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 16px rgba(15, 23, 42, 0.25);
+                background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+                color: #ffffff;
+            }
+
+            .btn-modern-action:active:not(:disabled) {
+                transform: translateY(0);
+                box-shadow: 0 2px 8px rgba(15, 23, 42, 0.15);
+            }
+
+        .btn-modern-save {
+            background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+            color: #ffffff;
+            font-weight: 700;
+            border: none;
+            border-radius: 12px;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+        }
+
+            .btn-modern-save:hover:not(:disabled) {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 16px rgba(79, 70, 229, 0.35);
+                color: #ffffff;
+            }
+
+        /* Порожній стан характеристик */
+        .empty-state {
+            background: #ffffff;
+            border: 2px dashed #cbd5e1;
+            color: #64748b;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-align: center;
+            padding: 30px 20px;
+            border-radius: 16px;
+            line-height: 1.5;
+        }
+
+        /* Картки алгоритмів */
+        .algorithm-item {
+            background: #ffffff !important;
+            border: 1px solid #f1f5f9 !important;
+            border-radius: 16px !important;
+            padding: 20px !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .algorithm-item:hover {
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+                border-color: #e2e8f0 !important;
+            }
+
+            .algorithm-item::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 4px;
+                height: 100%;
+                background: #4f46e5;
+                border-top-left-radius: 16px;
+                border-bottom-left-radius: 16px;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            }
+
+            .algorithm-item:hover::before {
+                opacity: 1;
+            }
+
+            .algorithm-item label {
+                color: #334155;
+                font-size: 0.75rem;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                margin-bottom: 12px;
+                display: block;
+            }
+
+        /* Селекти та інпути */
+        .form-select, .form-control {
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            box-shadow: none;
+            transition: border-color 0.2s;
+        }
+
+            .form-select:focus, .form-control:focus {
+                border-color: #4f46e5;
+                box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+            }
+
+        /* Кнопки запуску алгоритмів */
+        .btn-primary.btn-sm {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+            font-weight: 600;
+            border-radius: 8px;
+            padding: 8px 12px;
+            transition: all 0.2s;
+        }
+
+            .btn-primary.btn-sm:hover {
+                background: #dbeafe;
+                color: #1e40af;
+                border-color: #93c5fd;
+                transform: translateY(-1px);
+            }
+
+        /* Матриці та Таблиці */
+        .matrix-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            font-size: 0.85rem;
+        }
+
+            .matrix-table th, .matrix-table td {
+                padding: 10px 8px;
+                text-align: center;
+                border-bottom: 1px solid #f1f5f9;
+                border-right: 1px solid #f1f5f9;
+            }
+
+                .matrix-table th:last-child, .matrix-table td:last-child {
+                    border-right: none;
+                }
+
+            .matrix-table tr:last-child td, .matrix-table tr:last-child th {
+                border-bottom: none;
+            }
+
+            .matrix-table thead th {
+                background: #f8fafc;
+                color: #475569;
+                font-weight: 700;
+                text-transform: uppercase;
+                font-size: 0.75rem;
+                letter-spacing: 0.5px;
+            }
+
+            .matrix-table tbody th {
+                background: #f8fafc;
+                color: #475569;
+                font-weight: 600;
+            }
+
+        /* Інтерактивні клітинки */
+        .matrix-cell.clickable {
+            cursor: pointer;
+            color: #4f46e5;
+            font-weight: 700;
+            background: rgba(79, 70, 229, 0.03);
+            transition: all 0.2s ease;
+        }
+
+            .matrix-cell.clickable:hover {
+                background: #4f46e5;
+                color: #ffffff;
+                transform: scale(1.05);
+                box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+                border-radius: 6px;
+            }
+
+        /* DFS/BFS таблиці */
+        .traversal-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+            .traversal-table th, .traversal-table td {
+                padding: 8px;
+                text-align: center;
+                border-bottom: 1px solid #f1f5f9;
+            }
+
+            .traversal-table thead th {
+                background: #1e293b;
+                color: #ffffff;
+                font-weight: 600;
+                letter-spacing: 0.5px;
+            }
+
+        .traversal-backtrack td {
+            background-color: #f8fafc;
+            color: #94a3b8;
+            font-style: italic;
+        }
+
+        /* Результат Дейкстри */
+        .weight-box {
+            background: #1e293b;
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+            .weight-box::after {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 4px;
+                background: linear-gradient(90deg, #38bdf8, #818cf8);
+            }
+
+            .weight-box .label {
+                font-size: 0.75rem;
+                color: #94a3b8;
+                text-transform: uppercase;
+                letter-spacing: 1.5px;
+                margin-bottom: 8px;
+            }
+
+            .weight-box .value {
+                font-size: 42px;
+                font-weight: 900;
+                color: #38bdf8;
+                line-height: 1;
+                text-shadow: 0 2px 10px rgba(56, 189, 248, 0.2);
+            }
+
+        .path-small {
+            background: #f1f5f9;
+            color: #334155;
+            padding: 10px 16px;
+            border-radius: 8px;
+            margin-top: 12px;
+            font-weight: 600;
+            font-family: monospace;
+            font-size: 0.9rem;
+            word-break: break-all;
+        }
+
+        /* Флойд Степер */
+        .floyd-stepper {
+            background: #1e293b;
+            color: #f8fafc;
+            padding: 12px 16px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.15);
+        }
+
+            .floyd-stepper .btn-ghost {
+                background: rgba(255,255,255,0.1);
+                border: none;
+                border-radius: 8px;
+                width: 32px;
+                height: 32px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.2s;
+            }
+
+                .floyd-stepper .btn-ghost:hover:not(:disabled) {
+                    background: rgba(255,255,255,0.25);
+                    transform: scale(1.1);
+                }
+
+                .floyd-stepper .btn-ghost:disabled {
+                    opacity: 0.3;
+                    cursor: not-allowed;
+                }
+
+        /* Секції характеристик (Генеруються JS) */
+        .analysis-section {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+            .analysis-section h6 {
+                color: #0f172a;
+                font-size: 0.8rem;
+                font-weight: 800;
+                letter-spacing: 0.5px;
+                margin-bottom: 12px !important;
+                border-bottom: 2px solid #f1f5f9;
+                padding-bottom: 8px;
+            }
+
+        /* =========================================
+                   СУЧАСНІ МОДАЛЬНІ ВІКНА
+                   ========================================= */
+        .modal-content {
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            overflow: hidden;
+        }
+
+        .modal-header {
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 16px 24px;
+        }
+
+        .modal-title {
+            color: #0f172a;
+            font-weight: 800;
+            font-size: 1.1rem;
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .modal-footer {
+            padding: 16px 24px;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+        }
+            /* Універсальна кнопка в модалках */
+            .modal-footer .btn {
+                border-radius: 10px;
+                font-weight: 700;
+                padding: 10px 0;
+                transition: all 0.2s;
+            }
+
+            .modal-footer .btn-primary {
+                background: #4f46e5;
+                border: none;
+            }
+
+                .modal-footer .btn-primary:hover {
+                    background: #4338ca;
+                    box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
+                }
+
+            .modal-footer .btn-secondary {
+                background: #e2e8f0;
+                color: #334155;
+                border: none;
+            }
+
+                .modal-footer .btn-secondary:hover {
+                    background: #cbd5e1;
+                }
+
+        .btn-close {
+            background-color: #e2e8f0;
+            border-radius: 50%;
+            padding: 8px;
+            opacity: 0.7;
+        }
+
+            .btn-close:hover {
+                opacity: 1;
+                background-color: #cbd5e1;
+            }
     </style>
 }
 
@@ -80,111 +517,113 @@
         </div>
     </div>
 
-    <div class="sidebar-panel shadow-sm">
-        <div class="panel-section">
+    <div class="sidebar-panel">
+        <div class="mb-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h4 class="m-0 fw-bold">АНАЛІЗ ГРАФІВ</h4>
-                <i class="fa-solid fa-circle-info text-muted"></i>
+                <h4 class="m-0">АНАЛІЗ ГРАФІВ</h4>
+                <i class="fa-solid fa-chart-pie text-muted" style="font-size: 1.2rem;"></i>
             </div>
-            <div class="d-flex mb-4">
-                <button id="btn-analyze" class="btn btn-dark w-100 py-2 rounded-3">АНАЛІЗУВАТИ</button>
+            <button id="btn-analyze" class="w-100 py-3 btn-modern-action">
+                <i class="fa-solid fa-wand-magic-sparkles me-2"></i>АНАЛІЗУВАТИ ГРАФ
+            </button>
+        </div>
+
+        <div class="mb-4">
+            <h6 class="panel-section-title text-uppercase fw-bold"><i class="fa-solid fa-chart-line me-2"></i>Характеристики</h6>
+            <div id="stats-container" class="empty-state">
+                <i class="fa-solid fa-bezier-curve mb-2 text-slate-300" style="font-size: 2rem; display: block; opacity: 0.5;"></i>
+                Дані відсутні.<br /> Намалюйте граф та натисніть кнопку обчислення.
             </div>
         </div>
 
-        <div class="panel-section">
-            <h6 class="text-uppercase fw-bold text-muted mb-3"><i class="fa-solid fa-chart-line me-2"></i>Характеристики</h6>
-            <div id="stats-container" class="empty-state rounded-4">
-                ДАНІ ВІДСУТНІ. НАМАЛЮЙТЕ ГРАФ ТА НАТИСНІТЬ КНОПКУ "АНАЛІЗУВАТИ".
-            </div>
-        </div>
+        <div class="mt-auto">
+            <h6 class="panel-section-title text-uppercase fw-bold"><i class="fa-solid fa-microchip me-2"></i>Алгоритми</h6>
 
-        <div class="panel-section mt-auto">
-            <h6 class="text-uppercase fw-bold text-muted mb-3"><i class="fa-solid fa-gears me-2"></i>Алгоритми</h6>
-
-            <div class="algorithm-item mb-3 bg-light p-3 rounded-4 border">
-                <label class="small fw-bold mb-2">АЛГОРИТМ ДЕЙКСТРИ</label>
-                <div class="row g-2 mb-2">
-                    <div class="col-6"><select id="dijkstra-start" class="form-select form-select-sm rounded-3"><option value="">Початкова</option></select></div>
-                    <div class="col-6"><select id="dijkstra-end" class="form-select form-select-sm rounded-3"><option value="">Кінцева</option></select></div>
+            <div class="algorithm-item mb-3">
+                <label><i class="fa-solid fa-route me-2 text-primary"></i>АЛГОРИТМ ДЕЙКСТРИ</label>
+                <div class="row g-2 mb-3">
+                    <div class="col-6"><select id="dijkstra-start" class="form-select form-select-sm"><option value="">Початкова</option></select></div>
+                    <div class="col-6"><select id="dijkstra-end" class="form-select form-select-sm"><option value="">Кінцева</option></select></div>
                 </div>
-                 <div class="d-flex justify-content-end mb-2">
-                    <button id="floyd-clear-highlights" class="btn btn-sm btn-outline-secondary">Очистити підсвічування</button>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <button id="floyd-clear-highlights" class="btn btn-link text-muted p-0 text-decoration-none" style="font-size: 0.75rem;"><i class="fa-solid fa-eraser me-1"></i>Очистити</button>
+                    <button id="run-dijkstra" class="btn btn-sm btn-primary">Знайти шлях</button>
                 </div>
-                <div class="d-grid">
-                    <button id="run-dijkstra" class="btn btn-sm btn-primary">Обчислити найкоротший шлях</button>
+                <div id="dijkstra-result" class="mt-2"></div>
+            </div>
+
+            <div class="algorithm-item mb-3">
+                <label><i class="fa-solid fa-arrow-down-up-across-line me-2 text-primary"></i>ПОШУК У ГЛИБИНУ (DFS)</label>
+                <div class="d-flex gap-2 mb-2">
+                    <select id="dfs-start" class="form-select form-select-sm w-50"><option value="">Вершина</option></select>
+                    <button id="run-dfs" class="btn btn-sm btn-primary w-50">Запустити</button>
                 </div>
-
-                <!-- Dijkstra result placed directly under its block -->
-                <div id="dijkstra-result" class="mt-3"></div>
+                <div id="dfs-result" class="mt-2"></div>
             </div>
 
-            <div class="algorithm-item mb-3 bg-light p-3 rounded-4 border">
-                <label class="small fw-bold mb-2">ПОШУК У ГЛИБИНУ (DFS)</label>
-                <div class="mb-2"><select id="dfs-start" class="form-select form-select-sm rounded-3"><option value="">Виберіть вершину</option></select></div>
-                <div class="d-grid"><button id="run-dfs" class="btn btn-sm btn-primary">Запустити DFS обхід</button></div>
-
-                <!-- DFS result placed under its block -->
-                <div id="dfs-result" class="mt-3"></div>
+            <div class="algorithm-item mb-3">
+                <label><i class="fa-solid fa-water me-2 text-primary"></i>ПОШУК У ШИРИНУ (BFS)</label>
+                <div class="d-flex gap-2 mb-2">
+                    <select id="bfs-start" class="form-select form-select-sm w-50"><option value="">Вершина</option></select>
+                    <button id="run-bfs" class="btn btn-sm btn-primary w-50">Запустити</button>
+                </div>
+                <div id="bfs-result" class="mt-2"></div>
             </div>
 
-            <div class="algorithm-item mb-3 bg-light p-3 rounded-4 border">
-                <label class="small fw-bold mb-2">ПОШУК У ШИРИНУ (BFS)</label>
-                <div class="mb-2"><select id="bfs-start" class="form-select form-select-sm rounded-3"><option value="">Виберіть вершину</option></select></div>
-                <div class="d-grid"><button id="run-bfs" class="btn btn-sm btn-primary">Запустити BFS обхід</button></div>
-
-                <!-- BFS result placed under its block -->
-                <div id="bfs-result" class="mt-3"></div>
-            </div>
-
-            <div class="algorithm-item mb-3 bg-light p-3 rounded-4 border">
-                <label class="small fw-bold mb-2">АЛГОРИТМ ФЛОЙДА-ВОРШЕЛА</label>
-                <div class="d-grid mb-2"><button id="run-floyd" class="btn btn-sm btn-primary">Побудувати матриці шляхів</button></div>
-                <div id="floyd-container" class="floyd-matrices" style="display:none;">
-                    <div class="floyd-stepper d-flex justify-content-between align-items-center mb-3">
-                        <button id="floyd-prev" class="btn btn-ghost btn-sm text-white"><i class="fa-solid fa-chevron-left"></i></button>
-                        <div>
-                            <div class="small text-uppercase">Поточний крок</div>
-                            <div id="floyd-step-title" class="fw-bold">—</div>
+            <div class="algorithm-item mb-3">
+                <label><i class="fa-solid fa-table-cells me-2 text-primary"></i>АЛГОРИТМ ФЛОЙДА-ВОРШЕЛА</label>
+                <button id="run-floyd" class="btn btn-sm btn-primary w-100 mb-2">Побудувати матриці шляхів</button>
+                <div id="floyd-container" style="display:none;">
+                    <div class="floyd-stepper mb-3 mt-3">
+                        <button id="floyd-prev" class="btn btn-ghost text-white"><i class="fa-solid fa-chevron-left"></i></button>
+                        <div class="text-center">
+                            <div class="text-uppercase" style="font-size: 0.65rem; opacity: 0.7; letter-spacing: 1px;">Поточний крок</div>
+                            <div id="floyd-step-title" class="fw-bold" style="font-size: 0.9rem;">—</div>
                         </div>
-                        <button id="floyd-next" class="btn btn-ghost btn-sm text-white"><i class="fa-solid fa-chevron-right"></i></button>
+                        <button id="floyd-next" class="btn btn-ghost text-white"><i class="fa-solid fa-chevron-right"></i></button>
                     </div>
 
-                    <div class="d-flex justify-content-end mb-2">
-                        <button id="floyd-clear-highlights" class="btn btn-sm btn-outline-secondary">Очистити підсвічування</button>
+                    <div class="text-end mb-2">
+                        <button id="floyd-clear-highlights" class="btn btn-link text-muted p-0 text-decoration-none" style="font-size: 0.75rem;"><i class="fa-solid fa-eraser me-1"></i>Очистити підсвічування</button>
                     </div>
 
-                    <div>
-                        <h6 class="small text-muted">Матриця відстаней M(<span id="floyd-step-index">0</span>)</h6>
-                        <div id="floyd-distance" class="mb-3"></div>
+                    <div class="mb-3">
+                        <h6 class="text-muted fw-bold mb-2" style="font-size:0.75rem;">МАТРИЦЯ ВІДСТАНЕЙ M(<span id="floyd-step-index">0</span>)</h6>
+                        <div id="floyd-distance"></div>
                     </div>
                     <div>
-                        <h6 class="small text-muted">Матриця предків T(<span id="floyd-step-index-2">0</span>)</h6>
+                        <h6 class="text-muted fw-bold mb-2" style="font-size:0.75rem;">МАТРИЦЯ ПРЕДКІВ T(<span id="floyd-step-index-2">0</span>)</h6>
                         <div id="floyd-predecessor"></div>
                     </div>
-                    <div class="mt-2"><small class="text-muted">Порада: клацніть на будь-яку клітинку в матриці M, щоб підсвітити шлях між вершинами на графі.</small></div>
+                    <div class="mt-3 bg-light p-2 rounded-3 text-center border">
+                        <small class="text-muted" style="font-size: 0.75rem;"><i class="fa-solid fa-lightbulb text-warning me-1"></i> Клацніть на клітинку в матриці M, щоб побачити шлях.</small>
+                    </div>
                 </div>
             </div>
 
             <div id="algorithm-result" class="mt-3 algorithm-result"></div>
         </div>
 
-        <div class="pt-3">
-            <button id="btn-save-project" class="btn btn-primary w-100 rounded-3 py-2"><i class="fa-solid fa-floppy-disk me-2"></i>Зберегти проєкт</button>
+        <div class="pt-4 border-top mt-3 border-slate-200">
+            <button id="btn-save-project" class="btn btn-modern-save w-100 py-3">
+                <i class="fa-solid fa-floppy-disk me-2"></i>ЗБЕРЕГТИ ПРОЄКТ
+            </button>
         </div>
     </div>
 </div>
 
 <div class="modal fade" id="modalWeight" tabindex="-1">
     <div class="modal-dialog modal-sm modal-dialog-centered">
-        <div class="modal-content rounded-4 shadow">
-            <div class="modal-header border-0 pb-0">
-                <h6 class="modal-title fw-bold">Вага ребра</h6>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title m-0"><i class="fa-solid fa-weight-hanging text-primary me-2"></i>Вага ребра</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <input type="number" id="input-weight" class="form-control rounded-3" placeholder="Введіть число...">
+                <input type="number" id="input-weight" class="form-control form-control-lg text-center fw-bold" placeholder="0">
             </div>
-            <div class="modal-footer border-0 pt-0">
-                <button class="btn btn-primary w-100 rounded-3" id="save-weight">Зберегти</button>
+            <div class="modal-footer">
+                <button class="btn btn-primary w-100" id="save-weight">Зберегти</button>
             </div>
         </div>
     </div>
@@ -192,15 +631,33 @@
 
 <div class="modal fade" id="modalRename" tabindex="-1">
     <div class="modal-dialog modal-sm modal-dialog-centered">
-        <div class="modal-content rounded-4 shadow">
-            <div class="modal-header border-0 pb-0">
-                <h6 class="modal-title fw-bold">Назва вершини</h6>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title m-0"><i class="fa-solid fa-font text-primary me-2"></i>Назва вершини</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <input type="text" id="input-rename" class="form-control rounded-3" maxlength="4" placeholder="max 4 симв.">
+                <input type="text" id="input-rename" class="form-control form-control-lg text-center fw-bold" maxlength="4" placeholder="V1">
             </div>
-            <div class="modal-footer border-0 pt-0">
-                <button class="btn btn-primary w-100 rounded-3" id="save-rename">Зберегти</button>
+            <div class="modal-footer">
+                <button class="btn btn-primary w-100" id="save-rename">Зберегти</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalAlert" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title m-0" id="modalAlertTitle"><i class="fa-solid fa-circle-exclamation text-primary me-2"></i>Сповіщення</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <p id="modalAlertBody" class="m-0 fw-semibold text-slate-700" style="font-size: 1rem;"></p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary w-100" data-bs-dismiss="modal">Зрозуміло</button>
             </div>
         </div>
     </div>
@@ -210,16 +667,46 @@
     <script src="~/js/canvas.js" asp-append-version="true"></script>
     <script>
         const projectId = '@projectId';
-        const projectName = '@Html.Raw(cleanProjectName)'; // Використовуємо змінну з чистою назвою
+        const projectName = '@Html.Raw(cleanProjectName)';
         const initialData = @Html.Raw(initialGraphJson);
 
-        // helper to render traversal protocol (DFS/BFS)
+        // ==========================================
+        // ФУНКЦІЯ ВИКЛИКУ КРАСИВОГО МОДАЛЬНОГО ВІКНА ЗАМІСТЬ ALERT
+        // ==========================================
+        function showModalAlert(title, message, iconType = 'info') {
+            const titleEl = document.getElementById('modalAlertTitle');
+            let iconHtml = '';
+
+            if(iconType === 'error' || title.toLowerCase().includes('помилка')) {
+                iconHtml = '<i class="fa-solid fa-circle-xmark text-danger me-2"></i>';
+            } else if(iconType === 'success' || title.toLowerCase().includes('успіх') || message.includes('✅')) {
+                iconHtml = '<i class="fa-solid fa-circle-check text-success me-2"></i>';
+            } else if(iconType === 'warning' || title.toLowerCase().includes('увага')) {
+                iconHtml = '<i class="fa-solid fa-triangle-exclamation text-warning me-2"></i>';
+            } else {
+                iconHtml = '<i class="fa-solid fa-circle-info text-primary me-2"></i>';
+            }
+
+            // Очищуємо текст від технічних емодзі, щоб іконка виглядала чисто
+            const cleanMessage = message.replace('✅ ', '').replace('❌ ', '');
+
+            titleEl.innerHTML = iconHtml + title;
+            document.getElementById('modalAlertBody').innerHTML = cleanMessage;
+
+            const modalEl = document.getElementById('modalAlert');
+            let modalInstance = bootstrap.Modal.getInstance(modalEl);
+            if (!modalInstance) {
+                modalInstance = new bootstrap.Modal(modalEl);
+            }
+            modalInstance.show();
+        }
+
         function renderTraversalResult(traversal, containerId, type = 'DFS') {
             const container = document.getElementById(containerId || 'algorithm-result');
-            if (!traversal || !traversal.protocol) { container.innerHTML = '<div class="text-muted">Немає даних</div>'; return; }
+            if (!traversal || !traversal.protocol) { container.innerHTML = '<div class="text-muted small">Немає даних</div>'; return; }
             let html = '';
             const collectionLabel = type.toUpperCase() === 'BFS' ? 'Черга' : 'Стек';
-            html += '<table class="traversal-table"><thead><tr><th>V</th><th>№</th><th>${collectionLabel}</th><th>Ребро</th></tr></thead><tbody>';
+            html += '<table class="traversal-table mt-2"><thead><tr><th>V</th><th>№</th><th>' + collectionLabel + '</th><th>Ребро</th></tr></thead><tbody>';
             traversal.protocol.forEach(step => {
                 const v = step.vertex || '—';
                 const num = (step.stepNumber !== null && step.stepNumber !== undefined) ? step.stepNumber : '—';
@@ -227,28 +714,27 @@
                 const edge = step.treeEdge || '—';
                 const isBack = (edge === 'backtrack' || v === '—');
                 html += `<tr ${isBack ? 'class="traversal-backtrack"' : ''}>`;
-                html += `<td>${v}</td><td>${num}</td><td>${stack}</td><td><small class="text-muted">${edge}</small></td>`;
+                html += `<td><strong>${v}</strong></td><td>${num}</td><td>${stack}</td><td><small class="text-muted">${edge}</small></td>`;
                 html += '</tr>';
             });
             html += '</tbody></table>';
             container.innerHTML = html;
         }
 
-        // helper to render dijkstra result: weight box + path
         function renderDijkstraResult(dijkstra) {
             const container = document.getElementById('dijkstra-result');
-            if (!dijkstra) { container.innerHTML = '<div class="text-muted">Немає даних</div>'; return; }
-            const weight = (dijkstra.totalWeight !== undefined && dijkstra.totalWeight !== null) ? dijkstra.totalWeight : dijkstra.totalweight ?? 0;
-            const path = dijkstra.pathNodes && dijkstra.pathNodes.length ? dijkstra.pathNodes.join(' → ') : '—';
+            if (!dijkstra) { container.innerHTML = '<div class="text-muted small">Немає даних</div>'; return; }
+            const weight = (dijkstra.totalWeight !== undefined && dijkstra.totalWeight !== null) ?
+                dijkstra.totalWeight : dijkstra.totalweight ?? 0;
+            const path = dijkstra.pathNodes && dijkstra.pathNodes.length ? dijkstra.pathNodes.join(' <i class="fa-solid fa-arrow-right mx-1 text-muted" style="font-size:0.7rem;"></i> ') : '—';
             let html = '';
-            html += `<div class="weight-box"><div class="label">Загальна вага шляху</div><div class="value">${weight}</div></div>`;
-            html += `<div class="path-small">Шлях: ${path}</div>`;
+            html += `<div class="weight-box mt-3"><div class="label">Загальна вага шляху</div><div class="value">${weight}</div></div>`;
+            html += `<div class="path-small text-center mt-2">${path}</div>`;
             container.innerHTML = html;
         }
 
-        // Define helpers early so they are available when floyd step rendering runs
         window.buildMatrixTable = function(mat, labels, clickable) {
-            let html = '<table class="matrix-table"><thead><tr><th>i \\ j</th>';
+            let html = '<div class="overflow-auto rounded-3 border"><table class="matrix-table mb-0"><thead><tr><th>i \\ j</th>';
             for (let li = 0; li < labels.length; li++) html += `<th>${labels[li]}</th>`;
             html += '</tr></thead><tbody>';
             for (let i = 0; i < mat.length; i++) {
@@ -262,7 +748,7 @@
                 }
                 html += '</tr>';
             }
-            html += '</tbody></table>';
+            html += '</tbody></table></div>';
             return html;
         };
 
@@ -352,9 +838,13 @@
         async function analyzeAll() {
             clearHighlights();
             const dto = buildGraphDto();
-            if (!dto) return alert('Граф відсутній або редактор не готовий');
+            if (!dto) { showModalAlert('Увага', 'Граф відсутній або редактор не готовий', 'warning'); return; }
             try {
-                document.getElementById('btn-analyze').disabled = true;
+                const btn = document.getElementById('btn-analyze');
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>ОБЧИСЛЕННЯ...';
+                btn.disabled = true;
+
                 const resp = await fetch('/api/analysis/metrics', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -367,54 +857,74 @@
                 }
                 const res = await resp.json();
                 renderAnalysis(res);
+
+                btn.innerHTML = originalHTML;
             } catch (err) {
-                alert(err.message || err);
+                showModalAlert('Помилка аналізу', err.message || err, 'error');
+                document.getElementById('btn-analyze').innerHTML = '<i class="fa-solid fa-wand-magic-sparkles me-2"></i>АНАЛІЗУВАТИ ГРАФ';
             } finally {
                 document.getElementById('btn-analyze').disabled = false;
             }
         }
 
-       // 1. ХАРАКТЕРИСТИКИ: Допоміжна функція побудови матриць (на всю ширину, з блідими нулями)
         function buildEnhancedMatrix(matrix, rowLabels, colLabels, cornerLabel) {
-            if (!matrix || matrix.length === 0) return '<div class="text-muted py-2">Порожня матриця</div>';
-            let html = '<table class="matrix-table w-100" style="font-size: 0.88rem; border-collapse: collapse; margin-top:0;">';
-            html += `<thead><tr style="border-bottom: 2px solid #e2e8f0;"><th class="text-muted font-monospace p-2 text-center" style="background: #f8fafc;">${cornerLabel}</th>`;
-            colLabels.forEach(cl => html += `<th class="fw-bold text-dark font-monospace p-2 text-center" style="min-width: 32px; background: #f8fafc;">${cl}</th>`);
+            if (!matrix || matrix.length === 0) return '<div class="text-muted small">Порожня матриця</div>';
+            let html = '<div class="overflow-auto rounded-3 border"><table class="matrix-table mb-0">';
+            html += `<thead><tr><th>${cornerLabel}</th>`;
+            colLabels.forEach(cl => html += `<th>${cl}</th>`);
             html += '</tr></thead><tbody>';
             for (let i = 0; i < matrix.length; i++) {
-                html += '<tr style="border-bottom: 1px solid #edf2f7;">';
-                html += `<th class="fw-bold text-secondary font-monospace p-2 text-center border-end" style="max-width: 50px; background: #f8fafc;">${rowLabels[i]}</th>`;
+                html += '<tr>';
+                html += `<th>${rowLabels[i]}</th>`;
                 for (let j = 0; j < matrix[i].length; j++) {
                     const val = matrix[i][j];
-                    const style = (val === 0) ? 'style="opacity: 0.25; font-weight: 300;"' : 'style="font-weight: 700; color: #4f46e5;"';
-                    html += `<td class="font-monospace p-2 text-center" ${style}>${val}</td>`;
+                    const style = (val === 0) ? 'style="opacity: 0.25;"' : 'style="font-weight: 800; color: #4f46e5;"';
+                    html += `<td ${style} class="font-monospace">${val}</td>`;
                 }
                 html += '</tr>';
             }
-            html += '</tbody></table>';
+            html += '</tbody></table></div>';
             return html;
         }
 
         const graphColorPalette = ["#ef4444", "#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899", "#14b8a6", "#f97316", "#64748b", "#06b6d4"];
 
-        // 3. РЕНДЕРИНГ ПАНЕЛІ (Із вашого дизайну)
         function renderAnalysis(data) {
             const container = document.getElementById('stats-container');
+            // Видаляємо клас empty-state щоб прибрати пунктирну рамку
+            container.classList.remove('empty-state');
+
             if (!data) { container.innerHTML = '<div class="text-muted text-center p-3">Немає даних</div>'; return; }
 
-            const isDirected = data.adjacencyList && data.adjacencyList.adjacencyList.length > 0 && data.adjacencyList.adjacencyList[0].inDegree !== undefined;
             const matrixLabels = data.labels || data.adjacencyList?.adjacencyList.map(e => e.vertex) || Array.from({length: data.adjacencyMatrix?.length || 0}, (_, i) => `v${i+1}`);
 
             window.lastAnalysisData = data;
             let html = '';
 
+            if (data.info) {
+                html += `
+                <div class="analysis-section">
+                    <h6><i class="fa-solid fa-circle-info text-primary me-2"></i>Загальна інформація</h6>
+                    <ul class="list-unstyled m-0 ms-1 d-flex flex-column gap-2" style="font-size: 0.85rem;">
+                        <li><span class="text-muted">Тип графа:</span> <strong class="float-end">${data.info.graphType || 'Неорієнтований'}</strong></li>
+                        <li><span class="text-muted">Кількість вершин:</span> <strong class="float-end">${data.info.nodeCount ?? 0}</strong></li>`;
+
+                if (data.cycleAndChromatic) {
+                    html += `<li><span class="text-muted">Наявність циклів:</span> <strong class="float-end">${data.cycleAndChromatic.hasCycle ? 'Так' : 'Ні'}</strong></li>`;
+
+                    if (data.cycleAndChromatic.hasCycle) {
+                        html += `<li class="d-flex justify-content-between align-items-center"><span class="text-muted">Довжина найкор. циклу:</span> <strong>${data.cycleAndChromatic.girth !== -1 ? data.cycleAndChromatic.girth : '—'}</strong></li>`;
+                        html += `<button class="btn btn-sm btn-outline-primary w-100 mt-2 fw-bold" id="flat-trigger-all-cycles">Показати цикл на графі</button>`;
+                    }
+                }
+                html += `</ul></div>`;
+            }
+
             if (data.adjacencyMatrix) {
                 html += `
-                <div class="analysis-section mb-4 text-start">
-                    <h6 class="text-uppercase text-muted fw-bold mb-2">Матриця суміжності</h6>
-                    <div class="overflow-auto border rounded-3 p-2 bg-light">
-                        ${buildEnhancedMatrix(data.adjacencyMatrix, matrixLabels, matrixLabels, "V \\ V")}
-                    </div>
+                <div class="analysis-section">
+                    <h6><i class="fa-solid fa-table me-2 text-primary"></i>Матриця суміжності</h6>
+                    ${buildEnhancedMatrix(data.adjacencyMatrix, matrixLabels, matrixLabels, "V \\ V")}
                 </div>`;
             }
 
@@ -424,126 +934,83 @@
                 if (data.edgeLabels && Array.isArray(data.edgeLabels) && data.edgeLabels.length === edgeCount) {
                     edgeLabels = data.edgeLabels;
                 } else if (window.graphEditor && Array.isArray(window.graphEditor.edges) && Array.isArray(window.graphEditor.nodes)) {
-                    // Build labels from current canvas edges in same order as graph DTO
                     const nodeLabelById = (window.graphEditor.nodes || []).reduce((acc, n) => { acc[n.id] = n.label; return acc; }, {});
                     edgeLabels = (window.graphEditor.edges || []).slice(0, edgeCount).map(e => {
                         const from = nodeLabelById[e.source] ?? e.source;
                         const to = nodeLabelById[e.target] ?? e.target;
-                        return `{${from}, ${to}}`;
+                        return `{${from},${to}}`;
                     });
                     if (edgeLabels.length < edgeCount) {
-                        // fallback to generic labels
                         edgeLabels = Array.from({length: edgeCount}, (_, j) => `e${j+1}`);
                     }
                 } else {
                     edgeLabels = Array.from({length: edgeCount}, (_, j) => `e${j+1}`);
                 }
-                 html += `
-                 <div class="analysis-section mb-4 text-start">
-                     <h6 class="text-uppercase text-muted fw-bold mb-2">Матриця інцидентності</h6>
-                     <div class="overflow-auto border rounded-3 p-2 bg-light">
-                         ${buildEnhancedMatrix(data.incidenceMatrix, matrixLabels, edgeLabels, "V \\ E")}
-                     </div>
+                html += `
+                 <div class="analysis-section">
+                     <h6><i class="fa-solid fa-table-list me-2 text-primary"></i>Матриця інцидентності</h6>
+                     ${buildEnhancedMatrix(data.incidenceMatrix, matrixLabels, edgeLabels, "V \\ E")}
                  </div>`;
             }
 
             if (data.adjacencyList && data.adjacencyList.adjacencyList) {
                 html += `
-                <div class="analysis-section mb-4 text-start">
-                    <h6 class="text-uppercase text-muted fw-bold mb-2">Списки суміжності</h6>
-                    <div class="table-responsive rounded-3 border">
-                        <table class="table table-sm table-hover align-middle mb-0" style="font-size: 0.9rem;">
-                            <thead class="table-light"><tr><th class="ps-3">Вершина</th><th>Суміжні вершини</th></tr></thead>
+                <div class="analysis-section">
+                    <h6><i class="fa-solid fa-list-ol me-2 text-primary"></i>Списки та Степені</h6>
+                    <div class="overflow-auto rounded-3 border">
+                        <table class="traversal-table mb-0" style="border:none;">
+                            <thead><tr><th>V</th><th>Степінь</th><th>Суміжні</th></tr></thead>
                             <tbody>`;
                 data.adjacencyList.adjacencyList.forEach(entry => {
                     html += `<tr>
-                        <td class="ps-3 fw-bold font-monospace text-primary">${entry.vertex}</td>
-                        <td class="text-dark font-monospace small">${entry.neighbors || '—'}</td>
-                    </tr>`;
-                });
-                html += `</tbody></table></div></div>`;
-            }
-
-            if (data.info) {
-                html += `
-                <div class="analysis-section mb-4 text-start">
-                    <h6 class="text-uppercase text-muted fw-bold mb-2">Загальна інформація</h6>
-                    <div class="ps-3 d-flex flex-column gap-1 border-start border-2">
-                        <div><strong>Тип графа:</strong> ${data.info.graphType || 'Неорієнтований'}</div>
-                        <div><strong>Кількість вершин:</strong> ${data.info.nodeCount ?? 0}</div>`;
-                
-                if (data.cycleAndChromatic) {
-                    html += `<div class="d-flex align-items-center">
-                        <strong>Наявність циклів:</strong> <span class="ms-1">${data.cycleAndChromatic.hasCycle ? 'Так' : 'Ні'}</span>`;
-                    if (data.cycleAndChromatic.hasCycle) {
-                        html += `<button class="btn btn-outline-primary btn-sm py-0 px-2 rounded-2 ms-3 text-uppercase fw-bold font-monospace" id="flat-trigger-all-cycles" style="font-size: 0.72rem;">показати</button>`;
-                    }
-                    html += `</div>`;
-                    if (data.cycleAndChromatic.hasCycle) {
-                        html += `<div><strong>Довжина найкоротшого циклу:</strong> <span class="fw-bold text-dark font-monospace ms-1">${data.cycleAndChromatic.girth !== -1 ? data.cycleAndChromatic.girth : '—'}</span></div>`;
-                    }
-                }
-                html += `</div></div>`;
-            }
-
-            if (data.adjacencyList && data.adjacencyList.adjacencyList) {
-                html += `
-                <div class="analysis-section mb-4 text-start">
-                    <h6 class="text-uppercase text-muted fw-bold mb-2">Степені вершин</h6>
-                    <div class="table-responsive rounded-3 border mb-2">
-                        <table class="table table-sm table-hover align-middle mb-0" style="font-size: 0.9rem;">
-                            <thead class="table-light"><tr><th class="ps-3">Вершина</th><th class="text-center">Степінь</th></tr></thead>
-                            <tbody>`;
-                data.adjacencyList.adjacencyList.forEach(entry => {
-                    html += `<tr>
-                        <td class="ps-3 font-monospace">${entry.vertex}</td>
-                        <td class="text-center font-monospace fw-bold">${entry.degree ?? 0}</td>
-                    </tr>`;
+                        <td><strong>${entry.vertex}</strong></td>
+                        <td class="text-primary fw-bold">${entry.degree ?? 0}</td>
+                        <td class="text-muted small">${entry.neighbors || '—'}</td>
+                     </tr>`;
                 });
                 html += `</tbody></table></div>`;
-                html += `<div class="ps-2 small fw-bold font-monospace text-uppercase ${data.adjacencyList.isRegular ? 'text-success' : 'text-danger'}">
-                    Регулярність: ${data.adjacencyList.isRegular ? 'ГРАФ Є РЕГУЛЯРНИЙ' : 'ГРАФ НЕ Є РЕГУЛЯРНИЙ'}
+                html += `<div class="mt-3 text-center p-2 rounded-3 fw-bold ${data.adjacencyList.isRegular ? 'bg-success text-white' : 'bg-light text-muted border'}" style="font-size: 0.8rem;">
+                    ${data.adjacencyList.isRegular ? '<i class="fa-solid fa-check-circle me-1"></i> ГРАФ Є РЕГУЛЯРНИМ' : '<i class="fa-solid fa-xmark-circle me-1"></i> ГРАФ НЕ Є РЕГУЛЯРНИМ'}
                 </div></div>`;
             }
 
             if (data.connectivity) {
                 html += `
-                <div class="analysis-section mb-4 text-start">
-                    <h6 class="text-uppercase text-muted fw-bold mb-2">Зв’язність</h6>
-                    <div class="ps-3 d-flex flex-column gap-1 border-start border-2">
-                        <div><strong>Кількість компонент зв’язності:</strong> ${data.connectivity.componentsCount ?? 1}</div>
-                        <div><strong>Число вершинної зв’язності &kappa;(G):</strong> ${data.connectivity.vertexConnectivity ?? '—'}</div>
-                        <div><strong>Число реберної зв’язності &lambda;(G):</strong> ${data.connectivity.edgeConnectivity ?? '—'}</div>
-                    </div>
+                <div class="analysis-section">
+                    <h6><i class="fa-solid fa-link me-2 text-primary"></i>Зв’язність</h6>
+                    <ul class="list-unstyled m-0 ms-1 d-flex flex-column gap-2" style="font-size: 0.85rem;">
+                        <li><span class="text-muted">К-ть компонент зв’язності:</span> <strong class="float-end text-primary">${data.connectivity.componentsCount ?? 1}</strong></li>
+                        <li><span class="text-muted">Вершинна зв’язність &kappa;(G):</span> <strong class="float-end">${data.connectivity.vertexConnectivity ?? '—'}</strong></li>
+                        <li><span class="text-muted">Реберна зв’язність &lambda;(G):</span> <strong class="float-end">${data.connectivity.edgeConnectivity ?? '—'}</strong></li>
+                    </ul>
                 </div>`;
             }
-
-            html += `
-            <div class="analysis-section mb-4 text-start">
-                <h6 class="text-uppercase text-muted fw-bold mb-1">Ейлерові структури</h6>
-                <div class="ps-3 text-muted small">${(data.eulerianStructures && data.eulerianStructures.length) ? data.eulerianStructures.join(', ') : 'Ейлерових структур не знайдено'}</div>
-            </div>`;
-
-            html += `
-            <div class="analysis-section mb-4 text-start">
-                <h6 class="text-uppercase text-muted fw-bold mb-1">Гамільтонові структури</h6>
-                <div class="ps-3 text-muted small">${(data.hamiltonianStructures && data.hamiltonianStructures.length) ? data.hamiltonianStructures.join(', ') : 'Гамільтонових структур не знайдено'}</div>
-            </div>`;
 
             if (data.cycleAndChromatic || data.independenceAndClique) {
                 html += `
-                <div class="analysis-section mb-4 text-start">
-                    <h6 class="text-uppercase text-muted fw-bold mb-2">Числові інваріанти</h6>
-                    <div class="ps-3 d-flex flex-column gap-1 border-start border-2">
-                        <div class="d-flex align-items-center">
-                            <strong>Хроматичне число &chi;(G):</strong> <span class="ms-1 fw-bold">${data.cycleAndChromatic?.chromaticNumber ?? '—'}</span>
-                            <button class="btn btn-outline-primary btn-sm py-0 px-2 rounded-2 ms-3 text-uppercase fw-bold font-monospace" id="flat-trigger-chromatic-coloring" style="font-size: 0.72rem;">розфарбувати</button>
-                        </div>
-                        <div><strong>Клікове число &omega;(G):</strong> <span class="font-monospace ms-1">${data.independenceAndClique?.cliqueNumber ?? '—'}</span></div>
-                        <div><strong>Число незалежності &alpha;(G):</strong> <span class="font-monospace ms-1">${data.independenceAndClique?.independenceNumber ?? '—'}</span></div>
-                    </div>
+                <div class="analysis-section">
+                    <h6><i class="fa-solid fa-calculator me-2 text-primary"></i>Числові інваріанти</h6>
+                    <ul class="list-unstyled m-0 ms-1 d-flex flex-column gap-2 mb-3" style="font-size: 0.85rem;">
+                        <li><span class="text-muted">Хроматичне число &chi;(G):</span> <strong class="float-end text-primary fs-6">${data.cycleAndChromatic?.chromaticNumber ?? '—'}</strong></li>
+                        <li><span class="text-muted">Клікове число &omega;(G):</span> <strong class="float-end">${data.independenceAndClique?.cliqueNumber ?? '—'}</strong></li>
+                        <li><span class="text-muted">Число незалежності &alpha;(G):</span> <strong class="float-end">${data.independenceAndClique?.independenceNumber ?? '—'}</strong></li>
+                    </ul>
+                    <button class="btn btn-sm btn-outline-primary w-100 fw-bold" id="flat-trigger-chromatic-coloring"><i class="fa-solid fa-palette me-2"></i>Розфарбувати граф</button>
                 </div>`;
             }
+
+            html += `
+            <div class="analysis-section">
+                <h6><i class="fa-solid fa-infinity me-2 text-primary"></i>Структури</h6>
+                <div class="mb-2">
+                   <span class="text-muted d-block" style="font-size:0.75rem;">Ейлерові:</span>
+                   <strong style="font-size:0.85rem;">${(data.eulerianStructures && data.eulerianStructures.length) ? data.eulerianStructures.join(', ') : 'Не знайдено'}</strong>
+                </div>
+                <div>
+                   <span class="text-muted d-block" style="font-size:0.75rem;">Гамільтонові:</span>
+                   <strong style="font-size:0.85rem;">${(data.hamiltonianStructures && data.hamiltonianStructures.length) ? data.hamiltonianStructures.join(', ') : 'Не знайдено'}</strong>
+                </div>
+            </div>`;
 
             container.innerHTML = html;
             initInteractiveMetricsHandlers();
@@ -553,24 +1020,20 @@
             const data = window.lastAnalysisData;
             if (!data) return;
 
-            // Скидання: прибираємо класи і стилі
             function resetAllCanvasHighlights() {
                 if (!window.graphEditor) return;
                 document.querySelectorAll('.node-group').forEach(el => el.classList.remove('highlight'));
                 document.querySelectorAll('.edge-weight-group').forEach(el => el.classList.remove('highlight-edge'));
-                
-                // Очищаємо інлайнові стилі, які блокували перемальовку
-                document.querySelectorAll('.graph-node, circle').forEach(c => { 
-                    c.style.removeProperty('fill'); c.style.removeProperty('stroke'); c.style.removeProperty('stroke-width'); 
+
+                document.querySelectorAll('.graph-node, circle').forEach(c => {
+                    c.style.removeProperty('fill'); c.style.removeProperty('stroke'); c.style.removeProperty('stroke-width');
                 });
-                document.querySelectorAll('.graph-edge, line, path').forEach(l => { 
-                    l.style.removeProperty('stroke'); l.style.removeProperty('stroke-width'); 
+                document.querySelectorAll('.graph-edge, line, path').forEach(l => {
+                    l.style.removeProperty('stroke'); l.style.removeProperty('stroke-width');
                 });
-                
                 window.graphEditor.render();
             }
 
-            // Кнопка РОЗФАРБУВАТИ (Хроматичне число)
             const chromaticBtn = document.getElementById('flat-trigger-chromatic-coloring');
             if (chromaticBtn && data.cycleAndChromatic?.coloring) {
                 chromaticBtn.onclick = () => {
@@ -597,7 +1060,6 @@
                 };
             }
 
-            // Кнопка ПОКАЗАТИ (Цикли)
             const cyclesBtn = document.getElementById('flat-trigger-all-cycles');
             if (cyclesBtn && data.cycleAndChromatic?.cyclePath) {
                 cyclesBtn.onclick = () => {
@@ -615,14 +1077,12 @@
                         const v = window.graphEditor.nodes.find(n => n.label.toString() === path[i+1].toString());
 
                         if (u && v) {
-                            // Підсвічуємо вершини
                             document.querySelectorAll(`.node-group[data-id="${u.id}"] circle, .node-group[data-id="${v.id}"] circle`).forEach(c => {
                                 c.style.setProperty('stroke', '#ef4444', 'important');
                                 c.style.setProperty('stroke-width', '4px', 'important');
                             });
-                            // Підсвічуємо ребро
-                            const edge = window.graphEditor.edges.find(e => 
-                                (e.source.toString() === u.id.toString() && e.target.toString() === v.id.toString()) || 
+                            const edge = window.graphEditor.edges.find(e =>
+                                (e.source.toString() === u.id.toString() && e.target.toString() === v.id.toString()) ||
                                 (!window.graphEditor.isDirectedGraph && e.source.toString() === v.id.toString() && e.target.toString() === u.id.toString())
                             );
                             if (edge) {
@@ -638,61 +1098,38 @@
             }
         }
 
-        // Перевизначаємо глобальну функцію очищення для інших алгоритмів (Дейкстра, DFS)
         window.clearHighlights = function() {
             window.activeHighlightType = null;
             if (window.graphEditor && typeof window.graphEditor.render === 'function') {
-                window.graphEditor.render(); // Це миттєво зітре всі кольори і підсвітки
+                window.graphEditor.render();
             }
-            const result = document.getElementById('algorithm-result'); 
+            const result = document.getElementById('algorithm-result');
             if (result) result.innerHTML = '';
         };
 
-        function buildMatrixTable(matrix, labels, clickable) {
-            if (!labels || !Array.isArray(labels)) return '<div class="text-muted">Немає даних для матриці</div>';
-            let html = '<table class="matrix-table"><thead><tr><th>V \ E</th>';
-            labels.forEach(label => html += `<th>${label}</th>`);
-            html += '</tr></thead><tbody>';
-            for (let i = 0; i < matrix.length; i++) {
-                html += '<tr>';
-                html += `<th>${labels[i]}</th>`;
-                for (let j = 0; j < matrix[i].length; j++) {
-                    const value = matrix[i][j] || '0';
-                    html += `<td>${value}</td>`;
-                }
-                html += '</tr>';
-            }
-            html += '</tbody></table>';
-            return html;
-        }
-
-        // common clearHighlights function
         function clearHighlights() {
             document.querySelectorAll('.node-group.highlight').forEach(el => el.classList.remove('highlight'));
             document.querySelectorAll('.edge-weight-group.highlight-edge').forEach(el => el.classList.remove('highlight-edge'));
 
             document.querySelectorAll('.graph-node').forEach(el => { el.style.fill = ""; });
             document.querySelectorAll('.graph-edge').forEach(el => { el.style.stroke = ""; el.style.strokeWidth = ""; });
-            
-            const result = document.getElementById('algorithm-result'); 
+            const result = document.getElementById('algorithm-result');
             if (result) result.innerHTML = '';
         }
 
-        // specific highlight function for edges
         function highlightPathByEdges(edgeIds) {
             clearHighlights();
             edgeIds.forEach(id => {
                 const g = document.querySelector(`.edge-weight-group[data-id="${id}"]`);
                 if (g) g.classList.add('highlight-edge');
             });
-            // also highlight nodes by labels if available
         }
 
         async function runDijkstra() {
             clearHighlights();
             const start = document.getElementById('dijkstra-start').value;
             const end = document.getElementById('dijkstra-end').value;
-            if (!start || !end) return alert('Виберіть початкову та кінцеву вершини');
+            if (!start || !end) { showModalAlert('Увага', 'Виберіть початкову та кінцеву вершини', 'warning'); return; }
             const dto = buildGraphDto();
             try {
                 const resp = await fetch('/api/analysis/dijkstra', {
@@ -705,13 +1142,13 @@
                 const r = await resp.json();
                 renderDijkstraResult(r);
                 if (r.pathEdges && r.pathEdges.length) highlightPathByEdges(r.pathEdges);
-            } catch (err) { alert(err.message || err); }
+            } catch (err) { showModalAlert('Помилка', err.message || err, 'error'); }
         }
 
         async function runDfs() {
             clearHighlights();
             const start = document.getElementById('dfs-start').value;
-            if (!start) return alert('Виберіть початкову вершину');
+            if (!start) { showModalAlert('Увага', 'Виберіть початкову вершину', 'warning'); return; }
             const dto = buildGraphDto();
             try {
                 const resp = await fetch('/api/analysis/dfs', {
@@ -721,13 +1158,13 @@
                 if (!resp.ok) { const err = await resp.json().catch(()=>null); throw new Error(err?.message || 'Помилка'); }
                 const r = await resp.json();
                 renderTraversalResult(r, 'dfs-result', 'DFS');
-            } catch (err) { alert(err.message || err); }
+            } catch (err) { showModalAlert('Помилка', err.message || err, 'error'); }
         }
 
         async function runBfs() {
             clearHighlights();
             const start = document.getElementById('bfs-start').value;
-            if (!start) return alert('Виберіть початкову вершину');
+            if (!start) { showModalAlert('Увага', 'Виберіть початкову вершину', 'warning'); return; }
             const dto = buildGraphDto();
             try {
                 const resp = await fetch('/api/analysis/bfs', {
@@ -737,21 +1174,21 @@
                 if (!resp.ok) { const err = await resp.json().catch(()=>null); throw new Error(err?.message || 'Помилка'); }
                 const r = await resp.json();
                 renderTraversalResult(r, 'bfs-result', 'BFS');
-            } catch (err) { alert(err.message || err); }
+            } catch (err) { showModalAlert('Помилка', err.message || err, 'error'); }
         }
 
-        // Floyd-Warshall UI logic
         let floydResult = null;
         let floydCurrentStep = 0;
-        let lastFloydHighlighted = null; // {r,c}
+        let lastFloydHighlighted = null;
 
         async function runFloydWarshall() {
             clearHighlights();
             lastFloydHighlighted = null;
             const dto = buildGraphDto();
-            if (!dto) return alert('Граф відсутній або редактор не готовий');
+            if (!dto) { showModalAlert('Помилка', 'Граф відсутній або редактор не готовий', 'error'); return; }
             try {
                 document.getElementById('run-floyd').disabled = true;
+                document.getElementById('run-floyd').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
                 const resp = await fetch('/api/analysis/floyd-warshall', {
                     method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
                     body: JSON.stringify({ graphData: JSON.stringify(dto) })
@@ -761,8 +1198,11 @@
                 floydCurrentStep = 0;
                 document.getElementById('floyd-container').style.display = 'block';
                 renderFloydStep(floydCurrentStep);
-            } catch (err) { alert(err.message || err); }
-            finally { document.getElementById('run-floyd').disabled = false; }
+            } catch (err) { showModalAlert('Помилка', err.message || err, 'error'); }
+            finally {
+                document.getElementById('run-floyd').disabled = false;
+                document.getElementById('run-floyd').innerHTML = 'Побудувати матриці шляхів';
+            }
         }
 
         function renderFloydStep(idx) {
@@ -771,40 +1211,33 @@
             const labels = floydResult.labels || [];
             document.getElementById('floyd-step-index').innerText = idx;
             document.getElementById('floyd-step-index-2').innerText = idx;
-
-            // set title: initialization or "Крок N (через vK)"
             if (idx === 0) {
                 document.getElementById('floyd-step-title').innerText = 'Ініціалізація (W)';
             } else {
-                const kIndex = idx - 1; // steps[1] corresponds to k=0
+                const kIndex = idx - 1;
                 const viaLabel = labels[kIndex] || `v${kIndex}`;
                 document.getElementById('floyd-step-title').innerText = `Крок ${idx} (через ${viaLabel})`;
             }
 
-            // render distance matrix
             const distHtml = window.buildMatrixTable(step.distanceMatrix, labels, true);
             document.getElementById('floyd-distance').innerHTML = distHtml;
-            // render predecessor matrix
             const predHtml = window.buildMatrixTable(step.predecessorMatrix, labels, false);
             document.getElementById('floyd-predecessor').innerHTML = predHtml;
 
-            // attach click handlers to distance cells (toggle highlighting)
             document.querySelectorAll('#floyd-distance .matrix-cell.clickable').forEach(cell => {
                 cell.addEventListener('click', (e) => {
                     const r = parseInt(cell.getAttribute('data-row'));
                     const c = parseInt(cell.getAttribute('data-col'));
-                    // toggle: if same cell clicked twice -> clear
+
                     if (lastFloydHighlighted && lastFloydHighlighted.r === r && lastFloydHighlighted.c === c) {
                         clearHighlights();
                         lastFloydHighlighted = null;
                         return;
                     }
                     lastFloydHighlighted = { r, c };
-                    highlightPathFromFloyd(r, c);
+                    window.highlightPathFromFloyd(r, c);
                 });
             });
-
-            // update prev/next button disabled state
             const prevBtn = document.getElementById('floyd-prev');
             const nextBtn = document.getElementById('floyd-next');
             if (prevBtn) prevBtn.disabled = (idx <= 0);
@@ -815,14 +1248,13 @@
         document.getElementById('floyd-prev')?.addEventListener('click', () => { if (floydCurrentStep>0) { floydCurrentStep--; renderFloydStep(floydCurrentStep); } });
         document.getElementById('floyd-next')?.addEventListener('click', () => { if (floydResult && floydCurrentStep < floydResult.steps.length-1) { floydCurrentStep++; renderFloydStep(floydCurrentStep); } });
         document.querySelectorAll('[id="floyd-clear-highlights"]').forEach(btn => {
-                btn.addEventListener('click', () => { 
-                    clearHighlights(); 
-                    lastFloydHighlighted = null; 
+                btn.addEventListener('click', () => {
+                    clearHighlights();
+                    lastFloydHighlighted = null;
                 });
         });
 
         document.addEventListener('DOMContentLoaded', () => {
-            // initialize from server data
             if (window.graphEditor && initialData && initialData.nodes) {
                 window.graphEditor.nodes = initialData.nodes;
                 window.graphEditor.edges = initialData.edges || [];
@@ -836,7 +1268,6 @@
                 window.graphEditor.render();
             }
 
-            // populate selects periodically (keeps UI in sync with canvas)
             populateNodeSelects();
             setInterval(populateNodeSelects, 800);
 
@@ -845,16 +1276,15 @@
             document.getElementById('run-dfs').addEventListener('click', runDfs);
             document.getElementById('run-bfs').addEventListener('click', runBfs);
 
-            // Save project handler
             document.getElementById('btn-save-project').addEventListener('click', async () => {
                 if (!window.graphEditor) return;
 
                 const btn = document.getElementById('btn-save-project');
                 const originalText = btn.innerHTML;
+
                 btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Збереження...';
                 btn.disabled = true;
 
-                // Формуємо об'єкт так, як очікує бекенд
                 const graphDataObj = {
                     nodes: window.graphEditor.nodes,
                     edges: window.graphEditor.edges,
@@ -867,19 +1297,18 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             projectId: projectId,
-                            name: projectName, // Передаємо виключно чисту назву без " - GraphAn"
+                            name: projectName,
                             graphData: JSON.stringify(graphDataObj)
                         })
                     });
-
                     if (response.ok) {
-                        alert('✅ Проєкт успішно збережено!');
+                        showModalAlert('Успіх', 'Проєкт успішно збережено!', 'success');
                     } else {
-                        alert('❌ Помилка при збереженні проєкту.');
+                        showModalAlert('Помилка', 'Сталася помилка при збереженні проєкту.', 'error');
                     }
                 } catch (err) {
                     console.error(err);
-                    alert('❌ Помилка з\'єднання з сервером.');
+                    showModalAlert('Помилка зв\'язку', 'Не вдалося з\'єднатися з сервером.', 'error');
                 } finally {
                     btn.innerHTML = originalText;
                     btn.disabled = false;

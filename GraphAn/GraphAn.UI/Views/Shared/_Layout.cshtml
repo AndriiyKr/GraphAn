@@ -33,6 +33,51 @@
             align-items: center;
             justify-content: center;
             text-align: center;
+            gap: 6px;
+        }
+
+        /* Сучасні стилі для елементів навігації хедера */
+        .navbar-custom {
+            background-color: #ffffff !important;
+            transition: all 0.3s ease;
+        }
+
+        .navbar-brand-custom {
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            transition: transform 0.2s ease;
+        }
+
+            .navbar-brand-custom:hover {
+                transform: scale(1.02);
+            }
+
+        .navbar-link-custom {
+            font-size: 15px;
+            font-weight: 600;
+            color: #495057 !important;
+            padding: 8px 16px !important;
+            border-radius: 8px;
+            transition: all 0.2s ease-in-out;
+        }
+
+            .navbar-link-custom:hover {
+                color: #0d6efd !important;
+                background-color: #f8f9fa;
+            }
+
+        /* Стильний бадж для відображення імені поточного користувача */
+        .user-profile-badge {
+            background-color: #f1f3f5;
+            padding: 6px 14px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #343a40;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
 
         .modern-footer {
@@ -59,66 +104,109 @@
 
     @await RenderSectionAsync("Styles", required: false)
 </head>
-<body class="@(isCanvas ? "" : "page-with-footer d-flex flex-column min-vh-100 bg-light")">
+<body class="@(isCanvas ? "vh-100 vw-100 d-flex flex-column overflow-hidden bg-white" : "page-with-footer d-flex flex-column min-vh-100 bg-light")">
 
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3 py-3">
-            <div class="container">
-                <a class="navbar-brand fw-bold text-primary d-flex align-items-center gap-2" asp-controller="Home" asp-action="Index">
-                    <i class="fa-solid fa-circle-nodes"></i> GraphAn
-                </a>
-                <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between align-items-center">
-                    <ul class="navbar-nav flex-grow-1 fw-semibold">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Home" asp-action="Index">Головна</a>
-                        </li>
-                        @if (User.Identity?.IsAuthenticated == true)
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Home" asp-action="Projects">Мої проєкти</a>
-                            </li>
-                        }
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Home" asp-action="Privacy">Конфіденційність</a>
-                        </li>
-                    </ul>
-                    <ul class="navbar-nav fw-semibold align-items-center">
-                        @if (User.Identity?.IsAuthenticated == true)
-                        {
-                            <li class="nav-item d-flex align-items-center">
-                                @if (!String.IsNullOrWhiteSpace(User.Identity?.Name))
-                                {
-                                    <span class="navbar-text text-dark me-3">
-                                        <i class="fa-solid fa-circle-user text-muted me-1"></i> Привіт, @User.Identity.Name!
-                                    </span>
-                                }
+    <header class="@(isCanvas ? "w-100 flex-shrink-0" : "")">
+        <nav class="navbar navbar-expand-md navbar-light bg-white border-bottom shadow-sm navbar-custom sticky-top @(isCanvas ? "py-2" : "py-3")">
+            <div class="@(isCanvas ? "container-fluid px-4" : "container")">
 
-                                <button id="logoutNavBtn" type="button" class="btn btn-outline-danger btn-sm rounded-3 px-3">
-                                    <i class="fa-solid fa-arrow-right-from-bracket me-1"></i> Вийти
-                                </button>
-                            </li>
-                        }
-                        else
-                        {
+                @if (isCanvas)
+                {
+                    <div class="d-flex align-items-center justify-content-between w-100">
+                        <div class="d-flex align-items-center gap-3">
+                            <a class="navbar-brand navbar-brand-custom text-primary d-flex align-items-center m-0" asp-controller="Home" asp-action="Index" title="На головну">
+                                <i class="fa-solid fa-circle-nodes fs-4"></i>
+                            </a>
+                            <div class="vr text-muted opacity-25 my-1" style="height: 20px;"></div>
+                            <a asp-controller="Home" asp-action="Projects" class="btn btn-light btn-sm rounded-3 px-3 py-2 text-secondary fw-semibold border-0 bg-opacity-70">
+                                <i class="fa-solid fa-arrow-left-long me-1"></i> <span class="d-none d-sm-inline">До проєктів</span>
+                            </a>
+                            <div class="vr text-muted opacity-25 my-1 d-none d-md-block" style="height: 20px;"></div>
+                            <span class="fw-bold text-dark d-none d-md-inline text-truncate" style="max-width: 280px;" title="@ViewData["Title"]">
+                                <i class="fa-regular fa-file-code text-muted me-2"></i>@ViewData["Title"]
+                            </span>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-4">
+                            @if (User.Identity?.IsAuthenticated == true && !String.IsNullOrWhiteSpace(User.Identity?.Name))
+                            {
+                                <div class="user-profile-badge border bg-light bg-opacity-50 px-3 py-1.5 rounded-pill shadow-none" style="font-size: 13px;">
+                                    <i class="fa-solid fa-circle-user text-primary fs-5"></i>
+                                    <span class="text-dark">@User.Identity.Name</span>
+                                </div>
+                            }
+                            <button id="logoutNavBtn" type="button" class="btn btn-link text-danger text-decoration-none fw-bold text-uppercase p-0 m-0 border-0 bg-transparent" style="font-size: 12px; letter-spacing: 0.5px;">
+                                <i class="fa-solid fa-arrow-right-from-bracket"></i> <span class="d-none d-sm-inline">Вийти</span>
+                            </button>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <a class="navbar-brand navbar-brand-custom text-primary d-flex align-items-center gap-2" asp-controller="Home" asp-action="Index">
+                        <div class="bg-primary text-white rounded-3 d-flex align-items-center justify-content-center shadow-sm" style="width: 38px; height: 38px;">
+                            <i class="fa-solid fa-circle-nodes" style="font-size: 18px;"></i>
+                        </div>
+                        <span>GraphAn</span>
+                    </a>
+
+                    <button class="navbar-toggler border-0 shadow-none p-0" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                            aria-expanded="false" aria-label="Toggle navigation">
+                        <i class="fa-solid fa-bars fa-lg text-secondary"></i>
+                    </button>
+
+                    <div class="navbar-collapse collapse d-md-inline-flex justify-content-between align-items-center mt-3 mt-md-0">
+                        <ul class="navbar-nav flex-grow-1 gap-1 ps-md-3">
                             <li class="nav-item">
-                                <a class="nav-link text-dark me-2" asp-controller="Home" asp-action="Login">Увійти</a>
+                                <a class="nav-link navbar-link-custom" asp-controller="Home" asp-action="Index">Головна</a>
                             </li>
+                            @if (User.Identity?.IsAuthenticated == true)
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link navbar-link-custom" asp-controller="Home" asp-action="Projects">Мої проєкти</a>
+                                </li>
+                            }
                             <li class="nav-item">
-                                <a class="btn btn-primary btn-sm rounded-3 px-3" asp-controller="Home" asp-action="Register">Реєстрація</a>
+                                <a class="nav-link navbar-link-custom" asp-controller="Home" asp-action="Privacy">Конфіденційність</a>
                             </li>
-                        }
-                    </ul>
-                </div>
+                        </ul>
+
+                        <ul class="navbar-nav align-items-center gap-2 mt-3 mt-md-0">
+                            @if (User.Identity?.IsAuthenticated == true)
+                            {
+                                <li class="nav-item d-flex align-items-center gap-3 flex-column flex-sm-row w-100 w-md-auto">
+                                    @if (!String.IsNullOrWhiteSpace(User.Identity?.Name))
+                                    {
+                                        <div class="user-profile-badge shadow-none">
+                                            <i class="fa-solid fa-circle-user text-primary fs-5"></i>
+                                            <span>@User.Identity.Name</span>
+                                        </div>
+                                    }
+                                    <button id="logoutNavBtn" type="button" class="btn btn-outline-danger btn-sm rounded-3 px-3 py-2 fw-bold text-uppercase" style="font-size: 13px; letter-spacing: 0.3px;">
+                                        <i class="fa-solid fa-arrow-right-from-bracket small"></i> Вийти
+                                    </button>
+                                </li>
+                            }
+                            else
+                            {
+                                <li class="nav-item w-100 w-md-auto text-center text-md-start">
+                                    <a class="nav-link navbar-link-custom px-3 py-2 me-md-2" asp-controller="Home" asp-action="Login">Увійти</a>
+                                </li>
+                                <li class="nav-item w-100 w-md-auto">
+                                    <a class="btn btn-primary btn-sm rounded-3 px-4 py-2 fw-bold shadow-sm text-uppercase w-100" style="font-size: 13px; letter-spacing: 0.3px;" asp-controller="Home" asp-action="Register">
+                                        Реєстрація
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                }
             </div>
         </nav>
     </header>
 
-    <div class="container flex-grow-1">
-        <main role="main" class="pb-3">
+    <div class="@(isCanvas ? "w-100 flex-grow-1 min-height-0 overflow-hidden" : "container flex-grow-1")">
+        <main role="main" class="h-100 @(isCanvas ? "" : "pb-3")">
             @RenderBody()
         </main>
     </div>
@@ -180,26 +268,19 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
 
     <script>
-        // Асинхронний обробник безпечного та швидкого виходу без перезавантажень чи виводу JSON
         document.getElementById('logoutNavBtn')?.addEventListener('click', async function (e) {
             e.preventDefault();
-
-            // Дістаємо токен захисту з прихованої форми для успішної валідації на сервері
             const token = document.querySelector('#logoutForm input[name="__RequestVerificationToken"]')?.value;
 
             try {
-                // Виконуємо запит у фоновому режимі
                 await fetch('/api/auth/logout', {
                     method: 'POST',
-                    headers: {
-                        'RequestVerificationToken': token || ''
-                    },
+                    headers: { 'RequestVerificationToken': token || '' },
                     credentials: 'same-origin'
                 });
             } catch (err) {
                 console.error('Помилка запиту виходу:', err);
             } finally {
-                // У будь-якому випадку (навіть якщо мережа обірвалась) примусово скеровуємо на головну сторінку
                 window.location.href = '/';
             }
         });

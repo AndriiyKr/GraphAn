@@ -6,7 +6,7 @@
     <div class="card shadow-sm border-0 rounded-4" style="width: 100%; max-width: 420px; background-color: #ffffff;">
         <div class="card-body p-4 p-md-5">
             <div class="text-center mb-4">
-                <div class="d-inline-flex align-items-center justify-content-center bg-primary text-white rounded-circle mb-3 shadow-sm" style="width: 65px; height: 65px;">
+                <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-circle mb-3 shadow-sm" style="width: 65px; height: 65px;">
                     <i class="fa-solid fa-user-lock fa-2x"></i>
                 </div>
                 <h3 class="fw-bold text-dark mb-1">З поверненням!</h3>
@@ -14,6 +14,8 @@
             </div>
 
             <form id="loginForm" method="post">
+                <div id="auth-alert" class="alert d-none rounded-3 py-2 small mb-3 text-center"></div>
+
                 <div class="form-floating mb-3">
                     <input type="text" class="form-control rounded-3" id="loginInput" name="Login" placeholder="name@example.com" required>
                     <label for="loginInput"><i class="fa-solid fa-envelope me-2 text-muted"></i>Email або Логін</label>
@@ -29,10 +31,8 @@
                         <input class="form-check-input" type="checkbox" id="rememberMe" name="RememberMe">
                         <label class="form-check-label small text-muted" for="rememberMe">Запам'ятати мене</label>
                     </div>
-                    <a href="/Home/ForgotPassword" class="small text-primary text-decoration-none fw-bold">Забули пароль?</a>
+                    <a asp-controller="Home" asp-action="ForgotPassword" class="small text-primary text-decoration-none fw-bold">Забули пароль?</a>
                 </div>
-
-                <div id="auth-alert" class="alert d-none rounded-3 py-2 small mb-3 text-center"></div>
 
                 <button type="submit" class="btn btn-primary w-100 py-3 rounded-3 fw-bold shadow-sm mb-3">
                     УВІЙТИ
@@ -41,7 +41,7 @@
 
             <div class="text-center">
                 <span class="text-muted small">Немає акаунту?</span>
-                <a href="/Home/Register" class="text-primary text-decoration-none fw-bold small">Зареєструватися</a>
+                <a asp-controller="Home" asp-action="Register" class="text-primary text-decoration-none fw-bold small">Зареєструватися</a>
             </div>
         </div>
     </div>
@@ -49,14 +49,15 @@
 
 @section Scripts {
     <script>
-                document.getElementById('loginForm').addEventListener('submit', async function(e) {
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const alertDiv = document.getElementById('auth-alert');
             const btn = this.querySelector('button[type="submit"]');
 
-            // Скидання стану
             alertDiv.classList.add('d-none');
             btn.disabled = true;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Зачекайте...';
 
             const data = {
                 login: document.getElementById('loginInput').value,
@@ -75,16 +76,17 @@
                 if (response.ok) {
                     window.location.href = '/Home/Projects';
                 } else {
-                    // Вивід помилки у форму
                     alertDiv.textContent = result.message || 'Невірний логін або пароль';
                     alertDiv.className = 'alert alert-danger rounded-3 py-2 small mb-3 text-center';
                     alertDiv.classList.remove('d-none');
+                    btn.innerHTML = originalText;
                     btn.disabled = false;
                 }
             } catch (err) {
                 alertDiv.textContent = 'Помилка з\'єднання з сервером';
                 alertDiv.className = 'alert alert-danger rounded-3 py-2 small mb-3 text-center';
                 alertDiv.classList.remove('d-none');
+                btn.innerHTML = originalText;
                 btn.disabled = false;
             }
         });

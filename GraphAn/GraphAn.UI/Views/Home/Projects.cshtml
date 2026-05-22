@@ -1,45 +1,117 @@
-﻿@{
+@{
     ViewData["Title"] = "Мої проєкти";
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Мої проєкти</h1>
-        <button id="createProjectBtn" class="btn btn-primary">➕ Створити новий проєкт</button>
+<div class="container py-5">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-5 border-bottom pb-4">
+        <div class="d-flex align-items-center gap-3 mb-3 mb-md-0">
+            <div class="bg-primary bg-opacity-10 text-primary rounded-3 d-flex align-items-center justify-content-center" style="width: 54px; height: 54px;">
+                <i class="fa-solid fa-folder-tree fa-xl"></i>
+            </div>
+            <h1 class="h2 fw-bold text-dark mb-0">Мої проєкти</h1>
+        </div>
+        <button id="createProjectBtn" class="btn btn-primary btn-lg rounded-3 px-4 py-2.5 fw-bold shadow-sm transition-all">
+            <i class="fa-solid fa-plus me-2"></i> Створити проєкт
+        </button>
     </div>
 
-    <div id="projectsGrid" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-        <div class="col text-center" id="loadingSpinner">
-            <div class="spinner-border text-primary" role="status">
+    <div id="page-alert" class="alert d-none rounded-4 py-3 mb-4 shadow-sm text-center fw-semibold"></div>
+
+    <div id="projectsGrid" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4">
+        <div class="col-12 text-center py-5 mt-5" id="loadingSpinner">
+            <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;" role="status">
                 <span class="visually-hidden">Завантаження...</span>
             </div>
+            <h5 class="fw-bold text-muted">Завантаження ваших проєктів...</h5>
         </div>
     </div>
 </div>
 
-<!-- Модальне вікно створення проєкту -->
 <div class="modal fade" id="createModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Новий проєкт</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 shadow border-0">
+            <div class="modal-header border-0 pb-0 pt-4 px-4">
+                <h5 class="modal-title fw-bold d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-wand-magic-sparkles text-primary"></i> Новий проєкт
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                <input type="text" id="projectName" class="form-control" placeholder="Назва проєкту (необов'язково)">
+            <div class="modal-body p-4">
+                <div id="create-modal-alert" class="alert d-none rounded-3 py-2 small mb-3 text-center"></div>
+
+                <p class="text-muted small mb-3">Введіть назву для вашого нового графового проєкту. Ви зможете змінити її пізніше всередині редактора.</p>
+
+                <div class="form-floating mb-2">
+                    <input type="text" id="projectName" class="form-control rounded-3" placeholder="Назва проєкту">
+                    <label for="projectName"><i class="fa-solid fa-pen-clip me-2 text-muted"></i>Назва проєкту (необов'язково)</label>
+                </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button>
-                <button type="button" id="confirmCreateBtn" class="btn btn-primary">Створити</button>
+            <div class="modal-footer border-0 pt-0 pb-4 px-4 d-flex justify-content-end gap-2">
+                <button type="button" class="btn btn-light rounded-3 px-4 fw-semibold" data-bs-dismiss="modal">Скасувати</button>
+                <button type="button" id="confirmCreateBtn" class="btn btn-primary rounded-3 px-4 fw-bold shadow-sm">
+                    Створити
+                </button>
             </div>
         </div>
     </div>
 </div>
+
+@section Styles {
+    <style>
+        /* Анімація для карток проєктів */
+        .project-card {
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+            .project-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 25px rgba(0,0,0,0.08) !important;
+            }
+
+        .transition-all {
+            transition: all 0.2s ease-in-out;
+        }
+        /* Стиль для круглої кнопки видалення */
+        .btn-delete-project {
+            width: 36px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background-color: #f8f9fa;
+            color: #dc3545;
+            transition: all 0.2s;
+        }
+
+            .btn-delete-project:hover {
+                background-color: #dc3545;
+                color: white;
+            }
+    </style>
+}
 
 @section Scripts {
     <script>
         const projectsGrid = document.getElementById('projectsGrid');
+        const pageAlert = document.getElementById('page-alert');
+        const modalAlert = document.getElementById('create-modal-alert');
         let projects = [];
+        let createModalInstance;
+
+        document.addEventListener("DOMContentLoaded", () => {
+            // Ініціалізуємо модальне вікно через сучасний API Bootstrap 5
+            createModalInstance = new bootstrap.Modal(document.getElementById('createModal'));
+            loadProjects();
+        });
+
+        function showPageAlert(message, isError = true) {
+            pageAlert.textContent = message;
+            pageAlert.className = `alert ${isError ? 'alert-danger' : 'alert-success'} rounded-4 py-3 mb-4 shadow-sm text-center fw-semibold`;
+            pageAlert.classList.remove('d-none');
+            // Автоматично ховаємо через 5 секунд
+            setTimeout(() => pageAlert.classList.add('d-none'), 5000);
+        }
 
         async function loadProjects() {
             try {
@@ -52,32 +124,65 @@
                 projects = data.projects || [];
                 renderProjects();
             } catch (error) {
-                projectsGrid.innerHTML = `<div class="col-12 text-center text-danger">Помилка завантаження: ${error.message}</div>`;
+                projectsGrid.innerHTML = `
+                    <div class="col-12 text-center py-5">
+                        <div class="bg-danger bg-opacity-10 text-danger rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                            <i class="fa-solid fa-triangle-exclamation fa-2x"></i>
+                        </div>
+                        <h5 class="fw-bold text-dark">Сталася помилка</h5>
+                        <p class="text-muted">${error.message}</p>
+                        <button onclick="loadProjects()" class="btn btn-outline-primary rounded-3 fw-bold mt-2">Спробувати ще раз</button>
+                    </div>`;
             }
         }
 
         function renderProjects() {
             if (!projects.length) {
-                projectsGrid.innerHTML = `<div class="col-12 text-center"><p>У вас ще немає проєктів. Створіть перший!</p></div>`;
+                projectsGrid.innerHTML = `
+                    <div class="col-12 text-center py-5 mt-4">
+                        <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-4" style="width: 100px; height: 100px;">
+                            <i class="fa-solid fa-folder-open fa-3x text-muted opacity-50"></i>
+                        </div>
+                        <h4 class="fw-bold text-dark">У вас ще немає проєктів</h4>
+                        <p class="text-muted mb-4">Створіть свій перший граф, щоб почати роботу з платформою.</p>
+                        <button onclick="document.getElementById('createProjectBtn').click()" class="btn btn-primary btn-lg rounded-3 px-4 fw-bold shadow-sm">
+                            <i class="fa-solid fa-plus me-2"></i> Створити перший проєкт
+                        </button>
+                    </div>`;
                 return;
             }
+
             let html = '';
-            for (let p of projects) {
-                const createdAt = new Date(p.createdAt).toLocaleDateString();
-                const updatedAt = new Date(p.updatedAt).toLocaleDateString();
+            // Сортуємо проєкти: найновіші (за датою оновлення) зверху
+            const sortedProjects = projects.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+
+            for (let p of sortedProjects) {
+                const createdAt = new Date(p.createdAt).toLocaleDateString('uk-UA');
+                const updatedAt = new Date(p.updatedAt).toLocaleDateString('uk-UA', { hour: '2-digit', minute: '2-digit' });
+                const safeName = escapeHtml(p.name) || 'Новий проєкт';
+
                 html += `
                     <div class="col">
-                        <div class="card h-100 shadow-sm">
-                            <div class="card-body">
-                                <h5 class="card-title">${escapeHtml(p.name)}</h5>
-                                <p class="card-text small text-muted">
-                                    Створено: ${createdAt}<br>
-                                    Оновлено: ${updatedAt}
-                                </p>
+                        <div class="card h-100 border-0 shadow-sm rounded-4 project-card bg-white">
+                            <div class="card-body p-4">
+                                <div class="d-flex justify-content-between align-items-start mb-4">
+                                    <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                        <i class="fa-solid fa-diagram-project fa-lg"></i>
+                                    </div>
+                                    <button class="btn border-0 btn-delete-project p-0" onclick="deleteProject('${p.projectId}')" title="Видалити проєкт">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </div>
+                                <h5 class="card-title fw-bold text-dark mb-2 text-truncate" title="${safeName}">${safeName}</h5>
+                                <div class="d-flex flex-column gap-1">
+                                    <span class="text-muted small"><i class="fa-regular fa-calendar-plus me-2 opacity-75"></i>Створено: ${createdAt}</span>
+                                    <span class="text-muted small"><i class="fa-regular fa-clock me-2 opacity-75"></i>Оновлено: ${updatedAt}</span>
+                                </div>
                             </div>
-                            <div class="card-footer bg-transparent d-flex justify-content-between">
-                                <a href="/home/project/${p.projectId}" class="btn btn-sm btn-outline-primary">Відкрити</a>
-                                <button class="btn btn-sm btn-outline-danger" onclick="deleteProject('${p.projectId}')">Видалити</button>
+                            <div class="card-footer bg-transparent border-0 p-4 pt-0">
+                                <a href="/home/project/${p.projectId}" class="btn btn-primary w-100 py-2.5 rounded-3 fw-bold shadow-sm">
+                                    <i class="fa-solid fa-door-open me-2"></i> Відкрити редактор
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -98,39 +203,62 @@
 
         document.getElementById('createProjectBtn').addEventListener('click', () => {
             document.getElementById('projectName').value = '';
-            $('#createModal').modal('show');
+            modalAlert.classList.add('d-none'); // ховаємо старі помилки
+            createModalInstance.show();
         });
 
-        document.getElementById('confirmCreateBtn').addEventListener('click', async () => {
+        document.getElementById('confirmCreateBtn').addEventListener('click', async function() {
+            const btn = this;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>...';
+            btn.disabled = true;
+            modalAlert.classList.add('d-none');
+
             const name = document.getElementById('projectName').value.trim();
-            const response = await fetch('/api/project/create', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: name || null })
-            });
-            if (response.ok) {
-                const data = await response.json();
-                $('#createModal').modal('hide');
-                window.location.href = `/home/project/${data.projectId}`;
-            } else {
-                const error = await response.json();
-                alert('Помилка створення: ' + (error.message || 'Невідома помилка'));
+            try {
+                const response = await fetch('/api/project/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: name || null })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    createModalInstance.hide();
+                    window.location.href = `/home/project/${data.projectId}`;
+                } else {
+                    const error = await response.json();
+                    modalAlert.textContent = error.message || 'Невідома помилка';
+                    modalAlert.className = 'alert alert-danger rounded-3 py-2 small mb-3 text-center';
+                    modalAlert.classList.remove('d-none');
+                }
+            } catch (err) {
+                modalAlert.textContent = 'Помилка з\'єднання з сервером';
+                modalAlert.className = 'alert alert-danger rounded-3 py-2 small mb-3 text-center';
+                modalAlert.classList.remove('d-none');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             }
         });
 
         window.deleteProject = async function(projectId) {
-            if (!confirm('Ви дійсно хочете видалити цей проєкт?')) return;
-            const response = await fetch(`/api/project/${projectId}`, {
-                method: 'DELETE'
-            });
-            if (response.ok) {
-                loadProjects();
-            } else {
-                const error = await response.json();
-                alert('Помилка видалення: ' + (error.message || 'Невідома помилка'));
+            if (!confirm('Ви дійсно хочете безповоротно видалити цей проєкт?')) return;
+
+            try {
+                const response = await fetch(`/api/project/${projectId}`, {
+                    method: 'DELETE'
+                });
+                if (response.ok) {
+                    showPageAlert('Проєкт успішно видалено!', false);
+                    loadProjects();
+                } else {
+                    const error = await response.json();
+                    showPageAlert('Помилка видалення: ' + (error.message || 'Невідома помилка'));
+                }
+            } catch (err) {
+                showPageAlert('Помилка з\'єднання з сервером');
             }
         };
-
-        loadProjects();
     </script>
 }

@@ -227,7 +227,23 @@ namespace GraphAn.BLL.Services
             }
 
             result.ChromaticNumber = coloring.Values.DefaultIfEmpty(-1).Max() + 1;
-            result.Coloring = coloring;
+            // Map coloring from node ids to node labels so frontend (which uses labels) can apply colors
+            var nodeLabelsForColoring = graph.Nodes.ToDictionary(n => n.Id, n => n.Label);
+            var labelColoring = new Dictionary<string, int>();
+            foreach (var kvp in coloring)
+            {
+                if (nodeLabelsForColoring.TryGetValue(kvp.Key, out var label))
+                {
+                    labelColoring[label] = kvp.Value;
+                }
+                else
+                {
+                    // fallback to id if label missing
+                    labelColoring[kvp.Key] = kvp.Value;
+                }
+            }
+
+            result.Coloring = labelColoring;
 
             // --- Найкоротший цикл (BFS з кожної вершини) ---
             var nodeIds = graph.Nodes.Select(n => n.Id).ToList();

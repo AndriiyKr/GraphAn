@@ -374,55 +374,279 @@
             }
         }
 
+       // 1. ХАРАКТЕРИСТИКИ: Допоміжна функція побудови матриць (на всю ширину, з блідими нулями)
+        function buildEnhancedMatrix(matrix, rowLabels, colLabels, cornerLabel) {
+            if (!matrix || matrix.length === 0) return '<div class="text-muted py-2">Порожня матриця</div>';
+            let html = '<table class="matrix-table w-100" style="font-size: 0.88rem; border-collapse: collapse; margin-top:0;">';
+            html += `<thead><tr style="border-bottom: 2px solid #e2e8f0;"><th class="text-muted font-monospace p-2 text-center" style="background: #f8fafc;">${cornerLabel}</th>`;
+            colLabels.forEach(cl => html += `<th class="fw-bold text-dark font-monospace p-2 text-center" style="min-width: 32px; background: #f8fafc;">${cl}</th>`);
+            html += '</tr></thead><tbody>';
+            for (let i = 0; i < matrix.length; i++) {
+                html += '<tr style="border-bottom: 1px solid #edf2f7;">';
+                html += `<th class="fw-bold text-secondary font-monospace p-2 text-center border-end" style="max-width: 50px; background: #f8fafc;">${rowLabels[i]}</th>`;
+                for (let j = 0; j < matrix[i].length; j++) {
+                    const val = matrix[i][j];
+                    const style = (val === 0) ? 'style="opacity: 0.25; font-weight: 300;"' : 'style="font-weight: 700; color: #4f46e5;"';
+                    html += `<td class="font-monospace p-2 text-center" ${style}>${val}</td>`;
+                }
+                html += '</tr>';
+            }
+            html += '</tbody></table>';
+            return html;
+        }
+
+        const graphColorPalette = ["#ef4444", "#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899", "#14b8a6", "#f97316", "#64748b", "#06b6d4"];
+
+        // 3. РЕНДЕРИНГ ПАНЕЛІ (Із вашого дизайну)
         function renderAnalysis(data) {
             const container = document.getElementById('stats-container');
-            if (!data) { container.innerHTML = '<div class="text-muted">Немає даних</div>'; return; }
+            if (!data) { container.innerHTML = '<div class="text-muted text-center p-3">Немає даних</div>'; return; }
 
+            const isDirected = data.adjacencyList && data.adjacencyList.adjacencyList.length > 0 && data.adjacencyList.adjacencyList[0].inDegree !== undefined;
+            const matrixLabels = data.labels || data.adjacencyList?.adjacencyList.map(e => e.vertex) || Array.from({length: data.adjacencyMatrix?.length || 0}, (_, i) => `v${i+1}`);
+
+            window.lastAnalysisData = data;
             let html = '';
 
-            // Connectivity
-            html += '<div class="analysis-section">';
-            html += `<h6>Кількість компонентів зв’язності</h6><div class="value">${data.connectivity?.components ?? '—'}</div>`;
-            html += `<h6>Число вершинної зв’язності K(G)</h6><div class="value">${data.connectivity?.vertexConnectivity ?? '—'}</div>`;
-            html += `<h6>Число реберної зв’язності Λ(G)</h6><div class="value">${data.connectivity?.edgeConnectivity ?? '—'}</div>`;
-            html += '</div>';
-
-            // Eulerian structures
-            html += '<div class="analysis-section">';
-            html += '<h6>Ейлерові структури</h6>';
-            html += `<div class="text-muted">${data.eulerianStructures?.length ? data.eulerianStructures.join(', ') : 'Ейлерових структур не знайдено'}</div>`;
-            html += '</div>';
-
-            // Hamiltonian structures
-            html += '<div class="analysis-section">';
-            html += '<h6>Гамільтонові структури</h6>';
-            html += `<div class="text-muted">${data.hamiltonianStructures?.length ? data.hamiltonianStructures.join(', ') : 'Гамільтонових структур не знайдено'}</div>`;
-            html += '</div>';
-
-            // Numerical invariants
-            html += '<div class="analysis-section">';
-            html += '<h6>Числові інваріанти</h6>';
-            html += `<h6>Хроматичне число X(G)</h6><div class="value">${data.chromaticNumber ?? '—'}</div>`;
-            html += '</div>';
-
-            // Adjacency matrix
-            if (data.adjacencyMatrix && data.labels) {
-                html += '<div class="analysis-section">';
-                html += '<h6>Матриця суміжності</h6>';
-                html += buildMatrixTable(data.adjacencyMatrix, data.labels, false);
-                html += '</div>';
+            if (data.adjacencyMatrix) {
+                html += `
+                <div class="analysis-section mb-4 text-start">
+                    <h6 class="text-uppercase text-muted fw-bold mb-2">Матриця суміжності</h6>
+                    <div class="overflow-auto border rounded-3 p-2 bg-light">
+                        ${buildEnhancedMatrix(data.adjacencyMatrix, matrixLabels, matrixLabels, "V \\ V")}
+                    </div>
+                </div>`;
             }
 
-            // Incidence matrix
-            if (data.incidenceMatrix && data.labels) {
-                html += '<div class="analysis-section">';
-                html += '<h6>Матриця інцидентності</h6>';
-                html += buildMatrixTable(data.incidenceMatrix, data.labels, false);
-                html += '</div>';
+            if (data.incidenceMatrix) {
+                const edgeCount = data.incidenceMatrix[0].length;
+                let edgeLabels = [];
+                if (data.edgeLabels && Array.isArray(data.edgeLabels) && data.edgeLabels.length === edgeCount) {
+                    edgeLabels = data.edgeLabels;
+                } else if (window.graphEditor && Array.isArray(window.graphEditor.edges) && Array.isArray(window.graphEditor.nodes)) {
+                    // Build labels from current canvas edges in same order as graph DTO
+                    const nodeLabelById = (window.graphEditor.nodes || []).reduce((acc, n) => { acc[n.id] = n.label; return acc; }, {});
+                    edgeLabels = (window.graphEditor.edges || []).slice(0, edgeCount).map(e => {
+                        const from = nodeLabelById[e.source] ?? e.source;
+                        const to = nodeLabelById[e.target] ?? e.target;
+                        return `{${from}, ${to}}`;
+                    });
+                    if (edgeLabels.length < edgeCount) {
+                        // fallback to generic labels
+                        edgeLabels = Array.from({length: edgeCount}, (_, j) => `e${j+1}`);
+                    }
+                } else {
+                    edgeLabels = Array.from({length: edgeCount}, (_, j) => `e${j+1}`);
+                }
+                 html += `
+                 <div class="analysis-section mb-4 text-start">
+                     <h6 class="text-uppercase text-muted fw-bold mb-2">Матриця інцидентності</h6>
+                     <div class="overflow-auto border rounded-3 p-2 bg-light">
+                         ${buildEnhancedMatrix(data.incidenceMatrix, matrixLabels, edgeLabels, "V \\ E")}
+                     </div>
+                 </div>`;
+            }
+
+            if (data.adjacencyList && data.adjacencyList.adjacencyList) {
+                html += `
+                <div class="analysis-section mb-4 text-start">
+                    <h6 class="text-uppercase text-muted fw-bold mb-2">Списки суміжності</h6>
+                    <div class="table-responsive rounded-3 border">
+                        <table class="table table-sm table-hover align-middle mb-0" style="font-size: 0.9rem;">
+                            <thead class="table-light"><tr><th class="ps-3">Вершина</th><th>Суміжні вершини</th></tr></thead>
+                            <tbody>`;
+                data.adjacencyList.adjacencyList.forEach(entry => {
+                    html += `<tr>
+                        <td class="ps-3 fw-bold font-monospace text-primary">${entry.vertex}</td>
+                        <td class="text-dark font-monospace small">${entry.neighbors || '—'}</td>
+                    </tr>`;
+                });
+                html += `</tbody></table></div></div>`;
+            }
+
+            if (data.info) {
+                html += `
+                <div class="analysis-section mb-4 text-start">
+                    <h6 class="text-uppercase text-muted fw-bold mb-2">Загальна інформація</h6>
+                    <div class="ps-3 d-flex flex-column gap-1 border-start border-2">
+                        <div><strong>Тип графа:</strong> ${data.info.graphType || 'Неорієнтований'}</div>
+                        <div><strong>Кількість вершин:</strong> ${data.info.nodeCount ?? 0}</div>`;
+                
+                if (data.cycleAndChromatic) {
+                    html += `<div class="d-flex align-items-center">
+                        <strong>Наявність циклів:</strong> <span class="ms-1">${data.cycleAndChromatic.hasCycle ? 'Так' : 'Ні'}</span>`;
+                    if (data.cycleAndChromatic.hasCycle) {
+                        html += `<button class="btn btn-outline-primary btn-sm py-0 px-2 rounded-2 ms-3 text-uppercase fw-bold font-monospace" id="flat-trigger-all-cycles" style="font-size: 0.72rem;">показати</button>`;
+                    }
+                    html += `</div>`;
+                    if (data.cycleAndChromatic.hasCycle) {
+                        html += `<div><strong>Довжина найкоротшого циклу:</strong> <span class="fw-bold text-dark font-monospace ms-1">${data.cycleAndChromatic.girth !== -1 ? data.cycleAndChromatic.girth : '—'}</span></div>`;
+                    }
+                }
+                html += `</div></div>`;
+            }
+
+            if (data.adjacencyList && data.adjacencyList.adjacencyList) {
+                html += `
+                <div class="analysis-section mb-4 text-start">
+                    <h6 class="text-uppercase text-muted fw-bold mb-2">Степені вершин</h6>
+                    <div class="table-responsive rounded-3 border mb-2">
+                        <table class="table table-sm table-hover align-middle mb-0" style="font-size: 0.9rem;">
+                            <thead class="table-light"><tr><th class="ps-3">Вершина</th><th class="text-center">Степінь</th></tr></thead>
+                            <tbody>`;
+                data.adjacencyList.adjacencyList.forEach(entry => {
+                    html += `<tr>
+                        <td class="ps-3 font-monospace">${entry.vertex}</td>
+                        <td class="text-center font-monospace fw-bold">${entry.degree ?? 0}</td>
+                    </tr>`;
+                });
+                html += `</tbody></table></div>`;
+                html += `<div class="ps-2 small fw-bold font-monospace text-uppercase ${data.adjacencyList.isRegular ? 'text-success' : 'text-danger'}">
+                    Регулярність: ${data.adjacencyList.isRegular ? 'ГРАФ Є РЕГУЛЯРНИЙ' : 'ГРАФ НЕ Є РЕГУЛЯРНИЙ'}
+                </div></div>`;
+            }
+
+            if (data.connectivity) {
+                html += `
+                <div class="analysis-section mb-4 text-start">
+                    <h6 class="text-uppercase text-muted fw-bold mb-2">Зв’язність</h6>
+                    <div class="ps-3 d-flex flex-column gap-1 border-start border-2">
+                        <div><strong>Кількість компонент зв’язності:</strong> ${data.connectivity.componentsCount ?? 1}</div>
+                        <div><strong>Число вершинної зв’язності &kappa;(G):</strong> ${data.connectivity.vertexConnectivity ?? '—'}</div>
+                        <div><strong>Число реберної зв’язності &lambda;(G):</strong> ${data.connectivity.edgeConnectivity ?? '—'}</div>
+                    </div>
+                </div>`;
+            }
+
+            html += `
+            <div class="analysis-section mb-4 text-start">
+                <h6 class="text-uppercase text-muted fw-bold mb-1">Ейлерові структури</h6>
+                <div class="ps-3 text-muted small">${(data.eulerianStructures && data.eulerianStructures.length) ? data.eulerianStructures.join(', ') : 'Ейлерових структур не знайдено'}</div>
+            </div>`;
+
+            html += `
+            <div class="analysis-section mb-4 text-start">
+                <h6 class="text-uppercase text-muted fw-bold mb-1">Гамільтонові структури</h6>
+                <div class="ps-3 text-muted small">${(data.hamiltonianStructures && data.hamiltonianStructures.length) ? data.hamiltonianStructures.join(', ') : 'Гамільтонових структур не знайдено'}</div>
+            </div>`;
+
+            if (data.cycleAndChromatic || data.independenceAndClique) {
+                html += `
+                <div class="analysis-section mb-4 text-start">
+                    <h6 class="text-uppercase text-muted fw-bold mb-2">Числові інваріанти</h6>
+                    <div class="ps-3 d-flex flex-column gap-1 border-start border-2">
+                        <div class="d-flex align-items-center">
+                            <strong>Хроматичне число &chi;(G):</strong> <span class="ms-1 fw-bold">${data.cycleAndChromatic?.chromaticNumber ?? '—'}</span>
+                            <button class="btn btn-outline-primary btn-sm py-0 px-2 rounded-2 ms-3 text-uppercase fw-bold font-monospace" id="flat-trigger-chromatic-coloring" style="font-size: 0.72rem;">розфарбувати</button>
+                        </div>
+                        <div><strong>Клікове число &omega;(G):</strong> <span class="font-monospace ms-1">${data.independenceAndClique?.cliqueNumber ?? '—'}</span></div>
+                        <div><strong>Число незалежності &alpha;(G):</strong> <span class="font-monospace ms-1">${data.independenceAndClique?.independenceNumber ?? '—'}</span></div>
+                    </div>
+                </div>`;
             }
 
             container.innerHTML = html;
+            initInteractiveMetricsHandlers();
         }
+
+        function initInteractiveMetricsHandlers() {
+            const data = window.lastAnalysisData;
+            if (!data) return;
+
+            // Скидання: прибираємо класи і стилі
+            function resetAllCanvasHighlights() {
+                if (!window.graphEditor) return;
+                document.querySelectorAll('.node-group').forEach(el => el.classList.remove('highlight'));
+                document.querySelectorAll('.edge-weight-group').forEach(el => el.classList.remove('highlight-edge'));
+                
+                // Очищаємо інлайнові стилі, які блокували перемальовку
+                document.querySelectorAll('.graph-node, circle').forEach(c => { 
+                    c.style.removeProperty('fill'); c.style.removeProperty('stroke'); c.style.removeProperty('stroke-width'); 
+                });
+                document.querySelectorAll('.graph-edge, line, path').forEach(l => { 
+                    l.style.removeProperty('stroke'); l.style.removeProperty('stroke-width'); 
+                });
+                
+                window.graphEditor.render();
+            }
+
+            // Кнопка РОЗФАРБУВАТИ (Хроматичне число)
+            const chromaticBtn = document.getElementById('flat-trigger-chromatic-coloring');
+            if (chromaticBtn && data.cycleAndChromatic?.coloring) {
+                chromaticBtn.onclick = () => {
+                    if (window.activeHighlightType === 'chromatic') {
+                        resetAllCanvasHighlights();
+                        window.activeHighlightType = null;
+                        return;
+                    }
+                    resetAllCanvasHighlights();
+                    window.activeHighlightType = 'chromatic';
+
+                    Object.entries(data.cycleAndChromatic.coloring).forEach(([label, colorId]) => {
+                        const node = window.graphEditor.nodes.find(n => n.label.toString() === label.toString());
+                        if (node) {
+                            const colorHex = graphColorPalette[colorId % graphColorPalette.length];
+                            const svgNode = document.querySelector(`.node-group[data-id="${node.id}"] circle`);
+                            if (svgNode) {
+                                svgNode.style.setProperty('fill', colorHex, 'important');
+                                svgNode.style.setProperty('stroke', '#1e293b', 'important');
+                                svgNode.style.setProperty('stroke-width', '3px', 'important');
+                            }
+                        }
+                    });
+                };
+            }
+
+            // Кнопка ПОКАЗАТИ (Цикли)
+            const cyclesBtn = document.getElementById('flat-trigger-all-cycles');
+            if (cyclesBtn && data.cycleAndChromatic?.cyclePath) {
+                cyclesBtn.onclick = () => {
+                    if (window.activeHighlightType === 'cycles') {
+                        resetAllCanvasHighlights();
+                        window.activeHighlightType = null;
+                        return;
+                    }
+                    resetAllCanvasHighlights();
+                    window.activeHighlightType = 'cycles';
+
+                    const path = data.cycleAndChromatic.cyclePath;
+                    for (let i = 0; i < path.length - 1; i++) {
+                        const u = window.graphEditor.nodes.find(n => n.label.toString() === path[i].toString());
+                        const v = window.graphEditor.nodes.find(n => n.label.toString() === path[i+1].toString());
+
+                        if (u && v) {
+                            // Підсвічуємо вершини
+                            document.querySelectorAll(`.node-group[data-id="${u.id}"] circle, .node-group[data-id="${v.id}"] circle`).forEach(c => {
+                                c.style.setProperty('stroke', '#ef4444', 'important');
+                                c.style.setProperty('stroke-width', '4px', 'important');
+                            });
+                            // Підсвічуємо ребро
+                            const edge = window.graphEditor.edges.find(e => 
+                                (e.source.toString() === u.id.toString() && e.target.toString() === v.id.toString()) || 
+                                (!window.graphEditor.isDirectedGraph && e.source.toString() === v.id.toString() && e.target.toString() === u.id.toString())
+                            );
+                            if (edge) {
+                                const line = document.querySelector(`.edge-weight-group[data-id="${edge.id}"] .graph-edge`);
+                                if (line) {
+                                    line.style.setProperty('stroke', '#ef4444', 'important');
+                                    line.style.setProperty('stroke-width', '5px', 'important');
+                                }
+                            }
+                        }
+                    }
+                };
+            }
+        }
+
+        // Перевизначаємо глобальну функцію очищення для інших алгоритмів (Дейкстра, DFS)
+        window.clearHighlights = function() {
+            window.activeHighlightType = null;
+            if (window.graphEditor && typeof window.graphEditor.render === 'function') {
+                window.graphEditor.render(); // Це миттєво зітре всі кольори і підсвітки
+            }
+            const result = document.getElementById('algorithm-result'); 
+            if (result) result.innerHTML = '';
+        };
 
         function buildMatrixTable(matrix, labels, clickable) {
             if (!labels || !Array.isArray(labels)) return '<div class="text-muted">Немає даних для матриці</div>';
@@ -446,7 +670,12 @@
         function clearHighlights() {
             document.querySelectorAll('.node-group.highlight').forEach(el => el.classList.remove('highlight'));
             document.querySelectorAll('.edge-weight-group.highlight-edge').forEach(el => el.classList.remove('highlight-edge'));
-            const result = document.getElementById('algorithm-result'); if (result) result.innerHTML = '';
+
+            document.querySelectorAll('.graph-node').forEach(el => { el.style.fill = ""; });
+            document.querySelectorAll('.graph-edge').forEach(el => { el.style.stroke = ""; el.style.strokeWidth = ""; });
+            
+            const result = document.getElementById('algorithm-result'); 
+            if (result) result.innerHTML = '';
         }
 
         // specific highlight function for edges

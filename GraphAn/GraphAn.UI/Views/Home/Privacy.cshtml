@@ -1,53 +1,150 @@
-﻿@{
+@{
     ViewData["Title"] = "Політика конфіденційності";
 }
 
-<div class="container mt-5">
+<div class="container py-5">
     <div class="row justify-content-center">
-        <div class="col-md-8">
-            <h1 class="display-5">Політика конфіденційності</h1>
-            <hr class="my-4" />
-            <p>Останнє оновлення: @DateTime.Now.ToString("dd.MM.yyyy")</p>
-            <p>
-                Компанія <strong>GraphAn</strong> поважає вашу конфіденційність і зобов'язується захищати ваші персональні дані.
-                Ця політика пояснює, яку інформацію ми збираємо, як її використовуємо та які ваші права.
-            </p>
+        <div class="col-lg-9 col-md-11">
 
-            <h3 class="mt-4">1. Які дані ми збираємо</h3>
-            <ul>
-                <li><strong>Обліковий запис:</strong> електронна адреса, ім'я користувача, хеш пароля.</li>
-                <li><strong>Проєкти:</strong> дані графів у форматі JSON, назви проєктів, дати створення/оновлення.</li>
-                <li><strong>Технічні дані:</strong> IP-адреса, тип браузера, журнали сервера (лог-файли).</li>
-            </ul>
+            <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+                <div class="card-body">
 
-            <h3 class="mt-4">2. Як ми використовуємо ваші дані</h3>
-            <ul>
-                <li>Надання доступу до функціоналу візуального моделювання та аналізу графів.</li>
-                <li>Збереження та синхронізація ваших проєктів.</li>
-                <li>Покращення безпеки та продуктивності сервісу.</li>
-                <li>Зв'язок з вами для підтримки (якщо необхідно).</li>
-            </ul>
+                    <div class="d-flex align-items-center gap-3 mb-4 pb-3 border-bottom">
+                        <div class="bg-primary bg-opacity-10 text-primary rounded-3 d-flex align-items-center justify-content-center" style="width: 54px; height: 54px; flex-shrink: 0;">
+                            <i class="fa-solid fa-user-shield fa-xl"></i>
+                        </div>
+                        <div>
+                            <h1 class="h2 fw-bold text-dark mb-1">Політика конфіденційності</h1>
+                            <p class="text-muted small mb-0">
+                                <i class="fa-regular fa-calendar-check me-1"></i> Останнє оновлення: @DateTime.Now.ToString("dd.MM.yyyy")
+                            </p>
+                        </div>
+                    </div>
 
-            <h3 class="mt-4">3. Обмін даними з третіми сторонами</h3>
-            <p>Ми не передаємо ваші персональні дані третім особам, за винятком випадків, передбачених законом.</p>
+                    <p class="lead text-muted mb-4 fs-6">
+                        Платформа <strong>GraphAn</strong> поважає вашу конфіденційність і зобов'язується захищати ваші персональні дані.
+                        Ця політика детально пояснює, яку інформацію ми збираємо під час використання сервісу, як ми її обробляємо, захищаємо та які права ви маєте як користувач.
+                    </p>
 
-            <h3 class="mt-4">4. Ваші права</h3>
-            <ul>
-                <li>Переглядати, редагувати або видаляти свої проєкти.</li>
-                <li>Запитувати видалення облікового запису.</li>
-            </ul>
+                    <div class="privacy-section mb-4">
+                        <h4 class="fw-bold text-dark h5 mb-3 d-flex align-items-center gap-2">
+                            <span class="text-primary fw-bold">1.</span> Які дані ми збираємо
+                        </h4>
+                        <ul class="list-unstyled d-flex flex-column gap-2 text-muted ps-3 mb-0">
+                            <li class="d-flex align-items-start gap-2">
+                                <i class="fa-solid fa-circle-check text-primary mt-1 small"></i>
+                                <span><strong>Обліковий запис:</strong> електронна адреса (Email), унікальне ім'я користувача (Логін), безпечний криптографічний хеш пароля.</span>
+                            </li>
+                            <li class="d-flex align-items-start gap-2">
+                                <i class="fa-solid fa-circle-check text-primary mt-1 small"></i>
+                                <span><strong>Проєкти:</strong> структуровані дані інтерактивних графів у форматі JSON, користувацькі назви проєктів, тимчасові мітки створення та оновлення.</span>
+                            </li>
+                            <li class="d-flex align-items-start gap-2">
+                                <i class="fa-solid fa-circle-check text-primary mt-1 small"></i>
+                                <span><strong>Технічні дані:</strong> IP-адреса, інформація про тип і версію браузера, автоматичні лог-файли сервера для моніторингу помилок.</span>
+                            </li>
+                        </ul>
+                    </div>
 
-            <h3 class="mt-4">5. Безпека</h3>
-            <p>Ми використовуємо сучасні методи шифрування та захисту даних (хешування паролів, HTTPS, cookie з Secure/HttpOnly).</p>
+                    <div class="privacy-section mb-4">
+                        <h4 class="fw-bold text-dark h5 mb-3 d-flex align-items-center gap-2">
+                            <span class="text-primary fw-bold">2.</span> Як ми використовуємо дані
+                        </h4>
+                        <ul class="list-unstyled d-flex flex-column gap-2 text-muted ps-3 mb-0">
+                            <li class="d-flex align-items-start gap-2">
+                                <i class="fa-solid fa-shield-halved text-muted mt-1 small"></i>
+                                <span>Забезпечення повноцінного доступу до графічного редактора, інструментів виділення, згинання ребер та розрахунку метрик.</span>
+                            </li>
+                            <li class="d-flex align-items-start gap-2">
+                                <i class="fa-solid fa-shield-halved text-muted mt-1 small"></i>
+                                <span>Хмарне збереження, надійна синхронізація та керування вашими власними математичними моделями.</span>
+                            </li>
+                            <li class="d-flex align-items-start gap-2">
+                                <i class="fa-solid fa-shield-halved text-muted mt-1 small"></i>
+                                <span>Моніторинг стабільності системи, виправлення помилок рендерингу та підвищення загальної продуктивності сервісу.</span>
+                            </li>
+                            <li class="d-flex align-items-start gap-2">
+                                <i class="fa-solid fa-shield-halved text-muted mt-1 small"></i>
+                                <span>Зв'язок за допомогою автоматичних сервісів (наприклад, надсилання OTP-кодів при авторизації або відновленні пароля).</span>
+                            </li>
+                        </ul>
+                    </div>
 
-            <h3 class="mt-4">6. Контакти</h3>
-            <p>
-                Якщо у вас виникли питання щодо політики конфіденційності, будь ласка, зв'яжіться з нами через
-                <a href="https://github.com/AndriiyKr/GraphAn">репозиторій проєкту на GitHub</a> (створіть Issue).
-            </p>
+                    <div class="privacy-section mb-4">
+                        <h4 class="fw-bold text-dark h5 mb-3 d-flex align-items-center gap-2">
+                            <span class="text-primary fw-bold">3.</span> Обмін даними з третіми сторонами
+                        </h4>
+                        <p class="text-muted ps-3 mb-0">
+                            Ми дотримуємося суворої політики конфіденційності: ваші персональні дані, конфігурації проєктів та списки суміжності <strong>ніколи не передаються</strong> третім особам, за винятком прямих вимог чинного законодавства.
+                        </p>
+                    </div>
 
-            <hr class="my-4" />
-            <a href="/" class="btn btn-primary">На головну</a>
+                    <div class="privacy-section mb-4">
+                        <h4 class="fw-bold text-dark h5 mb-3 d-flex align-items-center gap-2">
+                            <span class="text-primary fw-bold">4.</span> Права користувачів
+                        </h4>
+                        <ul class="list-unstyled d-flex flex-column gap-2 text-muted ps-3 mb-0">
+                            <li class="d-flex align-items-start gap-2">
+                                <i class="fa-solid fa-user-gear text-primary mt-1 small"></i>
+                                <span>Повний контроль над даними: можливість у будь-який момент переглядати, модифікувати, очищати або повністю видаляти свої проєкти.</span>
+                            </li>
+                            <li class="d-flex align-items-start gap-2">
+                                <i class="fa-solid fa-user-gear text-primary mt-1 small"></i>
+                                <span>Право на надіслання офіційного запиту для повного видалення облікового запису та пов'язаної інформації з бази даних системи.</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="privacy-section mb-4">
+                        <h4 class="fw-bold text-dark h5 mb-3 d-flex align-items-center gap-2">
+                            <span class="text-primary fw-bold">5.</span> Безпека та захист інформації
+                        </h4>
+                        <p class="text-muted ps-3 mb-0">
+                            Для забезпечення цілісності інформації застосовуються виключно сучасні стандарти: захищене з'єднання через протокол <strong>HTTPS</strong>, надійне одностороннє хешування паролів за допомогою алгоритмів Identity, а також безпечні сесійні файли cookie із прапорцями <code>Secure</code> та <code>HttpOnly</code>.
+                        </p>
+                    </div>
+
+                    <div class="privacy-section mb-5">
+                        <h4 class="fw-bold text-dark h5 mb-3 d-flex align-items-center gap-2">
+                            <span class="text-primary fw-bold">6.</span> Зворотний зв'язок та контакти
+                        </h4>
+                        <p class="text-muted ps-3 mb-0">
+                            Якщо у вас виникли будь-які технічні питання, пропозиції щодо покращення безпеки або коду, ви можете зв'язатися з розробниками платформи безпосередньо, створивши звернення в нашому офіційному репозиторії:
+                            <a href="https://github.com/AndriiyKr/GraphAn" target="_blank" class="text-primary text-decoration-none fw-semibold">
+                                <i class="fa-brands fa-github ms-1 me-1"></i> GraphAn GitHub Issues
+                            </a>.
+                        </p>
+                    </div>
+
+                    <div class="border-top pt-4 d-flex justify-content-start">
+                        <a asp-controller="Home" asp-action="Index" class="btn btn-primary rounded-3 px-4 py-2.5 fw-bold shadow-sm transition-all">
+                            <i class="fa-solid fa-house me-2 small"></i> На головну
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+
         </div>
     </div>
 </div>
+
+@section Styles {
+    <style>
+        .privacy-section p, .privacy-section span {
+            line-height: 1.6;
+        }
+
+        .privacy-section code {
+            font-size: 85%;
+            color: #d63384;
+            background-color: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .transition-all {
+            transition: all 0.2s ease-in-out;
+        }
+    </style>
+}

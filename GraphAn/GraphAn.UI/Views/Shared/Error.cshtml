@@ -6,7 +6,7 @@
     // Базові значення для невідомого коду помилки
     string title = "Невідома помилка";
     string description = "Сталася непередбачувана помилка під час обробки вашого запиту.";
-    string icon = "fa-triangle-exclamation";
+    string icon = "fa-triangle-exclamation"; // 100% Free
     string colorClass = "text-danger";
     string bgClass = "bg-danger";
 
@@ -18,7 +18,7 @@
         case 401:
             title = "Необхідна автентифікація";
             description = "Ви намагаєтеся отримати доступ до захищеної зони, але ваш поточний сеанс не є авторизованим.";
-            icon = "fa-shield-lock";
+            icon = "fa-user-shield"; // Замінено на 100% Free
             colorClass = "text-warning";
             bgClass = "bg-warning";
             instructions = new List<string>
@@ -32,7 +32,7 @@
         case 403:
             title = "Доступ заборонено";
             description = "У вас немає достатніх прав чи дозволів для перегляду цієї сторінки, проєкту або виконання цієї операції.";
-            icon = "fa-user-lock";
+            icon = "fa-user-lock"; // 100% Free
             colorClass = "text-danger";
             bgClass = "bg-danger";
             instructions = new List<string>
@@ -46,7 +46,7 @@
         case 404:
             title = "Сторінку не знайдено";
             description = "Запитуваний ресурс або проєкт графа не існує, був безповоротно видалений розробником або його адреса змінилася.";
-            icon = "fa-compass-drafting";
+            icon = "fa-file-circle-question"; // Замінено на 100% Free (відмінно підходить для "Не знайдено")
             colorClass = "text-primary";
             bgClass = "bg-primary";
             instructions = new List<string>
@@ -62,7 +62,7 @@
         case 502:
             title = "Внутрішня помилка сервера";
             description = "Наші сервери зіткнулися з непередбачуваною технічною проблемою під час обчислення метрик або збереження графа.";
-            icon = "fa-bug";
+            icon = "fa-bug"; // 100% Free
             colorClass = "text-danger";
             bgClass = "bg-danger";
             instructions = new List<string>

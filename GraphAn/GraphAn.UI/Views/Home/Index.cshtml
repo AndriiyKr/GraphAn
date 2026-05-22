@@ -1,76 +1,127 @@
-﻿@{
-    ViewData["Title"] = "GraphAn - Візуальне моделювання графів";
+@{
+    ViewData["Title"] = "Головна";
 }
 
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8 text-center">
-            <h1 class="display-4 fw-bold">GraphAn</h1>
-            <p class="lead">Візуальне моделювання та аналіз графів онлайн</p>
-            <hr class="my-4" />
-
-            @if (User.Identity?.IsAuthenticated == true)
-            {
-                <div class="alert alert-success">
-                    <strong>Ласкаво просимо, @User.Identity.Name!</strong>
-                </div>
-                <a href="/home/projects" class="btn btn-primary btn-lg">Перейти до моїх проєктів</a>
-                <button id="logoutBtn" type="button" class="btn btn-outline-secondary btn-lg ms-2">Вийти</button>
-                <form id="logoutForm" action="/api/auth/logout" method="post" class="d-none"></form>
-            }
-            else
-            {
-                <div class="d-grid gap-3 d-sm-flex justify-content-sm-center">
-                    <a href="/home/login" class="btn btn-primary btn-lg px-4 gap-3">Увійти</a>
-                    <a href="/home/register" class="btn btn-outline-secondary btn-lg px-4">Зареєструватися</a>
-                </div>
-            }
+<div class="hero-section py-5 my-4 text-center position-relative">
+    <div class="container py-4">
+        <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-1 mb-3 fw-bold small tracking-wide">
+            <i class="fa-solid fa-circle-nodes me-2"></i> Інтерактивна платформа
+        </div>
+        <h1 class="display-4 fw-extrabold text-dark mb-3">
+            Візуальне моделювання та <br><span class="text-primary">комплексний аналіз графових структур</span>
+        </h1>
+        <p class="lead text-muted mx-auto mb-4" style="max-width: 680px;">
+            Потужний вебзастосунок, який поєднує гнучкий графічний редактор для побудови складних конфігурацій графів та автоматизований аналітичний модуль для обчислення метрик і класичних алгоритмів.
+        </p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="/Home/Register" class="btn btn-primary btn-lg px-4 py-3 rounded-3 fw-bold shadow-sm transition-all">
+                Зареєструватись <i class="fa-solid fa-arrow-right ms-2 small"></i>
+            </a>
+            <a href="/Home/Login" class="btn btn-outline-secondary btn-lg px-4 py-3 rounded-3 fw-bold transition-all">
+                Увійти до профілю
+            </a>
         </div>
     </div>
+</div>
 
-    <div class="row mt-5">
-        <div class="col-md-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body text-center">
-                    <h5 class="card-title">📊 Редактор графів</h5>
-                    <p class="card-text">Створюйте та редагуйте орієнтовані/неорієнтовані графи зі зручним drag&drop.</p>
+<div class="container pb-5 mb-5">
+    <div class="text-center mb-5">
+        <h6 class="text-uppercase text-primary fw-bold small tracking-wider mb-2">Можливості GraphAn</h6>
+        <h2 class="fw-bold text-dark">Все необхідне для дослідження графів</h2>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 border-0 shadow-sm rounded-4 p-3 feature-card">
+                <div class="card-body">
+                    <div class="feature-icon bg-primary text-white rounded-3 mb-4 d-flex align-items-center justify-content-center shadow-sm" style="width: 50px; height: 50px;">
+                        <i class="fa-solid fa-bezier-curve fa-lg"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-2">Гнучкий редактор</h5>
+                    <p class="text-muted small mb-0">Зручна побудова орієнтованих і неорієнтованих графів, підтримка ваг елементів, кратних ребер та петель за допомогою технології Drag & Drop.</p>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body text-center">
-                    <h5 class="card-title">⚙️ Алгоритми аналізу</h5>
-                    <p class="card-text">Дейкстра, Флойд-Воршел, BFS, DFS, хроматичне число, пошук циклів та інше.</p>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 border-0 shadow-sm rounded-4 p-3 feature-card">
+                <div class="card-body">
+                    <div class="feature-icon bg-dark text-white rounded-3 mb-4 d-flex align-items-center justify-content-center shadow-sm" style="width: 50px; height: 50px;">
+                        <i class="fa-solid fa-chart-simple fa-lg"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-2">Аналіз метрик</h5>
+                    <p class="text-muted small mb-0">Автоматичний розрахунок і вивід матриць суміжності, ступенів вершин, чисел зв'язності, незалежності та хроматичного числа в один клік.</p>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body text-center">
-                    <h5 class="card-title">💾 Збереження</h5>
-                    <p class="card-text">Автоматичне збереження проєктів у хмарі. Доступ з будь-якого пристрою.</p>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 border-0 shadow-sm rounded-4 p-3 feature-card">
+                <div class="card-body">
+                    <div class="feature-icon bg-success text-white rounded-3 mb-4 d-flex align-items-center justify-content-center shadow-sm" style="width: 50px; height: 50px;">
+                        <i class="fa-solid fa-route fa-lg"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-2">Оптимізація та шляхи</h5>
+                    <p class="text-muted small mb-0">Інтерактивна візуалізація та розрахунок найкоротших шляхів та обходів за допомогою алгоритмів Дейкстри, Флойда-Воршела, DFS та BFS.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 border-0 shadow-sm rounded-4 p-3 feature-card">
+                <div class="card-body">
+                    <div class="feature-icon bg-warning text-dark rounded-3 mb-4 d-flex align-items-center justify-content-center shadow-sm" style="width: 50px; height: 50px;">
+                        <i class="fa-solid fa-folder-open fa-lg"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-2">Хмарне збереження</h5>
+                    <p class="text-muted small mb-0">Надійна система реєстрації та автентифікації користувачів для безпечного збереження, редагування та керування власними проєктами.</p>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-@section Scripts {
-    <script>
-        // Logout via fetch for the button on the page
-        document.getElementById('logoutBtn')?.addEventListener('click', function (e) {
-            e.preventDefault();
-            fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' })
-                .then(() => { window.location.href = '/'; })
-                .catch(() => { window.location.href = '/'; });
-        });
+<div class="container mb-5 pb-4">
+    <div class="bg-dark text-white p-5 rounded-4 text-center shadow position-relative overflow-hidden">
+        <div class="position-absolute top-0 start-0 w-100 h-100 opacity-10" style="background: linear-gradient(135deg, #0d6efd, transparent); pointer-events: none;"></div>
+        <div class="position-relative z-1 py-3">
+            <h2 class="fw-bold mb-3">Готові оптимізувати роботу з графами?</h2>
+            <p class="text-muted lead mx-auto mb-4" style="max-width: 580px; color: #adb5bd !important;">
+                Приєднуйтесь до платформи та створюйте свої інтерактивні проєкти для точного розрахунку та автоматизованої візуалізації вже сьогодні.
+            </p>
+            <a href="/Home/Register" class="btn btn-light btn-lg px-5 py-3 rounded-3 fw-bold shadow-sm transition-all">
+                Спробувати
+            </a>
+        </div>
+    </div>
+</div>
 
-        // Keep existing form submit handler as fallback
-        document.getElementById('logoutForm')?.addEventListener('submit', function(e) {
-            fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' })
-                .then(() => window.location.href = '/');
-            e.preventDefault();
-        });
-    </script>
+@section Styles {
+    <style>
+        .fw-extrabold {
+            font-weight: 800;
+        }
+
+        .tracking-wide {
+            letter-spacing: 0.5px;
+        }
+
+        .tracking-wider {
+            letter-spacing: 1px;
+        }
+
+        .feature-card {
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+            .feature-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05) !important;
+            }
+
+        .transition-all {
+            transition: all 0.2s ease-in-out;
+        }
+
+    </style>
 }

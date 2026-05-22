@@ -130,6 +130,34 @@ namespace GraphAn.UI
                     }
                     catch (Exception ex)
                     {
+                        // Виводимо повний стек винятку в консоль для локальної діагностики
+                        try
+                        {
+                            Console.WriteLine("---------- DATABASE CONNECTIVITY EXCEPTION ----------");
+                            Console.WriteLine(ex.ToString());
+                            Console.WriteLine("----------------------------------------------------");
+
+                            // Виводимо захищену інформацію про connection string (тільки host та database, без паролів)
+                            try
+                            {
+                                var cs = connectionString ?? string.Empty;
+                                string host = cs.Split(';').FirstOrDefault(p => p.TrimStart().StartsWith("Host=", StringComparison.OrdinalIgnoreCase)) ??
+                                              cs.Split(';').FirstOrDefault(p => p.TrimStart().StartsWith("Server=", StringComparison.OrdinalIgnoreCase)) ?? string.Empty;
+                                string db = cs.Split(';').FirstOrDefault(p => p.TrimStart().StartsWith("Database=", StringComparison.OrdinalIgnoreCase)) ??
+                                            cs.Split(';').FirstOrDefault(p => p.TrimStart().StartsWith("DbName=", StringComparison.OrdinalIgnoreCase)) ?? string.Empty;
+                                if (!string.IsNullOrEmpty(host) || !string.IsNullOrEmpty(db))
+                                {
+                                    Console.WriteLine($"Connection info (masked): {host}; {db}");
+                                }
+                                else
+                                {
+                                    Console.WriteLine("Connection info not available or missing Host/Database in connection string.");
+                                }
+                            }
+                            catch { /* ignore */ }
+                        }
+                        catch { /* ignore console errors */ }
+
                         Log.Fatal(ex, "Помилка при перевірці підключення");
                     }
                 }

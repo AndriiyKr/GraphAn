@@ -1,0 +1,800 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>GraphAn.BLL</name>
+    </assembly>
+    <members>
+        <member name="T:GraphAn.BLL.Interfaces.IAlgorithmService">
+            <summary>
+            Інтерфейс сервісу для виконання алгоритмів на графі.
+            </summary>
+        </member>
+        <member name="M:GraphAn.BLL.Interfaces.IAlgorithmService.RunDijkstraAsync(GraphAn.BLL.Models.GraphDto,System.String,System.String)">
+            <summary>
+            Виконує алгоритм Дейкстри для знаходження найкоротшого шляху.
+            </summary>
+            <param name="graph">Модель графа.</param>
+            <param name="startId">Ідентифікатор початкової вершини.</param>
+            <param name="endId">Ідентифікатор кінцевої вершини.</param>
+            <returns>
+            Кортеж, де <c>Success</c> — результат операції,
+            <c>Message</c> — опис результату або помилки,
+            <c>Result</c> — результат алгоритму.
+            </returns>
+        </member>
+        <member name="M:GraphAn.BLL.Interfaces.IAlgorithmService.RunFloydWarshallAsync(GraphAn.BLL.Models.GraphDto)">
+            <summary>
+            Виконує алгоритм Флойда-Воршела для знаходження найкоротших шляхів між усіма парами вершин.
+            </summary>
+            <param name="graph">Модель графа.</param>
+            <returns>
+            Кортеж, де <c>Success</c> — результат операції,
+            <c>Message</c> — опис результату або помилки,
+            <c>Result</c> — результат алгоритму.
+            </returns>
+        </member>
+        <member name="M:GraphAn.BLL.Interfaces.IAlgorithmService.RunDfsAsync(GraphAn.BLL.Models.GraphDto,System.String)">
+            <summary>
+            Виконує алгоритм пошуку вглиб (DFS).
+            </summary>
+            <param name="graph">Модель графа.</param>
+            <param name="startId">Ідентифікатор початкової вершини.</param>
+            <returns>
+            Кортеж, де <c>Success</c> — результат операції,
+            <c>Message</c> — опис результату або помилки,
+            <c>Result</c> — результат алгоритму.
+            </returns>
+        </member>
+        <member name="M:GraphAn.BLL.Interfaces.IAlgorithmService.RunBfsAsync(GraphAn.BLL.Models.GraphDto,System.String)">
+            <summary>
+            Виконує алгоритм пошуку вшир (BFS).
+            </summary>
+            <param name="graph">Модель графа.</param>
+            <param name="startId">Ідентифікатор початкової вершини.</param>
+            <returns>
+            Кортеж, де <c>Success</c> — результат операції,
+            <c>Message</c> — опис результату або помилки,
+            <c>Result</c> — результат алгоритму.
+            </returns>
+        </member>
+        <member name="T:GraphAn.BLL.Interfaces.IEmailService">
+            <summary>
+            Контракт для сервісу роботи з електронною поштою.
+            </summary>
+        </member>
+        <member name="M:GraphAn.BLL.Interfaces.IEmailService.StartRegistrationAsync(System.String,System.String,System.String)">
+            <summary>
+            Починає процес реєстрації користувача та відправляє код підтвердження на email.
+            </summary>
+            <param name="email">Електронна пошта користувача.</param>
+            <param name="password">Пароль.</param>
+            <param name="username">Назва користувача.</param>
+            <returns>
+            Кортеж, де <c>Success</c> — результат операції,
+            <c>Message</c> — опис результату або помилки.
+            </returns>
+        </member>
+        <member name="M:GraphAn.BLL.Interfaces.IEmailService.ConfirmRegistrationAsync(System.String,System.String)">
+            <summary>
+            Підтвердити реєстрацію з кодом від користувача.
+            </summary>
+            <param name="email">Електронна пошта користувача.</param>
+            <param name="code">Код.</param>
+            <returns>
+            Кортеж, де <c>Success</c> — результат операції,
+            <c>Message</c> — опис результату або помилки.
+            </returns>
+        </member>
+        <member name="M:GraphAn.BLL.Interfaces.IEmailService.ForgotPasswordAsync(System.String,System.Func{System.String,System.String,System.String})">
+            <summary>
+            Надсилає на електронну пошту користувача посилання для скидання пароля.
+            </summary>
+            <param name="email">Електронна адреса користувача.</param>
+            <param name="resetLinkGenerator">Функція для генерації посилання скидання пароля, приймає email та токен.</param>
+            <returns>
+            Кортеж, де <c>Success</c> — результат операції,
+            <c>Message</c> — опис результату або помилки.
+            </returns>
+        </member>
+        <member name="M:GraphAn.BLL.Interfaces.IEmailService.ResetPasswordAsync(System.String,System.String,System.String)">
+            <summary>
+            Скидає пароль користувача за допомогою токена.
+            </summary>
+            <param name="email">Електронна адреса користувача.</param>
+            <param name="token">Токен скидання пароля.</param>
+            <param name="newPassword">Новий пароль.</param>
+            <returns>
+            Кортеж, де <c>Success</c> — результат операції,
+            <c>Message</c> — опис результату або помилки.
+            </returns>
+        </member>
+        <member name="T:GraphAn.BLL.Interfaces.IGraphMetricsService">
+            <summary>
+            Інтерфейс сервісу для обчислення метрик графа.
+            </summary>
+        </member>
+        <member name="M:GraphAn.BLL.Interfaces.IGraphMetricsService.GetAllMetrics(GraphAn.BLL.Models.GraphDto)">
+            <summary>
+            Обчислює всі метрики графа.
+            </summary>
+            <param name="graph">Модель графа.</param>
+            <returns>Всі метрики графа.</returns>
+        </member>
+        <member name="M:GraphAn.BLL.Interfaces.IGraphMetricsService.GetGraphInfo(GraphAn.BLL.Models.GraphDto)">
+            <summary>
+            Отримує базову інформацію про граф.
+            </summary>
+            <param name="graph">Модель графа.</param>
+            <returns>Базова інформація про граф.</returns>
+        </member>
+        <member name="M:GraphAn.BLL.Interfaces.IGraphMetricsService.GetAdjacencyMatrix(GraphAn.BLL.Models.GraphDto)">
+            <summary>
+            Обчислює матрицю суміжності графа.
+            </summary>
+            <param name="graph">Модель графа.</param>
+            <returns>Матриця суміжності у вигляді двовимірного списку.</returns>
+        </member>
+        <member name="M:GraphAn.BLL.Interfaces.IGraphMetricsService.GetIncidenceMatrix(GraphAn.BLL.Models.GraphDto)">
+            <summary>
+            Обчислює матрицю інцидентності графа.
+            </summary>
+            <param name="graph">Модель графа.</param>
+            <returns>Матриця інцидентності у вигляді двовимірного списку.</returns>
+        </member>
+        <member name="M:GraphAn.BLL.Interfaces.IGraphMetricsService.GetAdjacencyList(GraphAn.BLL.Models.GraphDto)">
+            <summary>
+            Отримує список суміжності та степені вершин графа.
+            </summary>
+            <param name="graph">Модель графа.</param>
+            <returns>Список суміжності та степені вершин.</returns>
+        </member>
+        <member name="M:GraphAn.BLL.Interfaces.IGraphMetricsService.GetCycleAndChromatic(GraphAn.BLL.Models.GraphDto)">
+            <summary>
+            Знаходить найкоротший цикл та хроматичне число графа.
+            </summary>
+            <param name="graph">Модель графа.</param>
+            <returns>Інформація про цикл та хроматичне число.</returns>
+        </member>
+        <member name="M:GraphAn.BLL.Interfaces.IGraphMetricsService.GetConnectivity(GraphAn.BLL.Models.GraphDto)">
+            <summary>
+            Обчислює числа реберної та вершинної зв'язності графа.
+            </summary>
+            <param name="graph">Модель графа.</param>
+            <returns>Числа зв'язності графа.</returns>
+        </member>
+        <member name="M:GraphAn.BLL.Interfaces.IGraphMetricsService.GetIndependenceAndClique(GraphAn.BLL.Models.GraphDto)">
+            <summary>
+            Обчислює число незалежності та клікове число графа.
+            </summary>
+            <param name="graph">Модель графа.</param>
+            <returns>Число незалежності та клікове число.</returns>
+        </member>
+        <member name="T:GraphAn.BLL.Interfaces.IProjectService">
+            <summary>
+            Інтерфейс сервісу для роботи з проектами.
+            </summary>
+        </member>
+        <member name="M:GraphAn.BLL.Interfaces.IProjectService.CreateProjectAsync(System.Guid,System.String)">
+            <summary>
+            Створює новий порожній проект.
+            </summary>
+            <param name="userId">Ідентифікатор користувача.</param>
+            <param name="name">Назва проекту.</param>
+            <returns>
+            Кортеж, де <c>Success</c> — результат операції,
+            <c>Message</c> — опис результату або помилки,
+            <c>ProjectId</c> — ідентифікатор створеного проекту.
+            </returns>
+        </member>
+        <member name="M:GraphAn.BLL.Interfaces.IProjectService.SaveProjectAsync(System.Guid,System.Guid,System.String,System.String)">
+            <summary>
+            Зберігає назву та дані графа існуючого проекту.
+            </summary>
+            <param name="userId">Ідентифікатор користувача.</param>
+            <param name="projectId">Ідентифікатор проекту.</param>
+            <param name="name">Нова назва проекту.</param>
+            <param name="graphData">Дані графа у форматі JSON.</param>
+            <returns>
+            Кортеж, де <c>Success</c> — результат операції,
+            <c>Message</c> — опис результату або помилки.
+            </returns>
+        </member>
+        <member name="M:GraphAn.BLL.Interfaces.IProjectService.GetProjectsAsync(System.Guid)">
+            <summary>
+            Отримує список проектів користувача без даних графа.
+            </summary>
+            <param name="userId">Ідентифікатор користувача.</param>
+            <returns>
+            Кортеж, де <c>Success</c> — результат операції,
+            <c>Message</c> — опис результату або помилки,
+            <c>Projects</c> — список проектів користувача.
+            </returns>
+        </member>
+        <member name="M:GraphAn.BLL.Interfaces.IProjectService.GetProjectAsync(System.Guid,System.Guid)">
+            <summary>
+            Отримує проект з даними графа за ідентифікатором.
+            </summary>
+            <param name="userId">Ідентифікатор користувача.</param>
+            <param name="projectId">Ідентифікатор проекту.</param>
+            <returns>
+            Кортеж, де <c>Success</c> — результат операції,
+            <c>Message</c> — опис результату або помилки,
+            <c>Project</c> — проект з даними графа.
+            </returns>
+        </member>
+        <member name="M:GraphAn.BLL.Interfaces.IProjectService.DeleteProjectAsync(System.Guid,System.Guid)">
+            <summary>
+            Видаляє проект користувача за ідентифікатором.
+            </summary>
+            <param name="userId">Ідентифікатор користувача.</param>
+            <param name="projectId">Ідентифікатор проекту.</param>
+            <returns>
+            Кортеж, де <c>Success</c> — результат операції,
+            <c>Message</c> — опис результату або помилки.
+            </returns>
+        </member>
+        <member name="T:GraphAn.BLL.Models.AdjacencyEntry">
+            <summary>
+            Запис списку суміжності для однієї вершини.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.AdjacencyEntry.Vertex">
+            <summary>
+            Отримує або задає мітку вершини.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.AdjacencyEntry.Neighbors">
+            <summary>
+            Отримує або задає список сусідів.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.AdjacencyEntry.Degree">
+            <summary>
+            Отримує або задає степінь вершини.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.AdjacencyEntry.InDegree">
+            <summary>
+            Отримує або задає вхідний степінь вершини (для орієнтованих графів).
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.AdjacencyEntry.OutDegree">
+            <summary>
+            Отримує або задає вихідний степінь вершини (для орієнтованих графів).
+            </summary>
+        </member>
+        <member name="T:GraphAn.BLL.Models.AdjacencyListResult">
+            <summary>
+            Список суміжності та степені вершин графа.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.AdjacencyListResult.AdjacencyList">
+            <summary>
+            Отримує або задає список суміжності.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.AdjacencyListResult.IsRegular">
+            <summary>
+            Отримує або задає значення, що вказує чи є граф регулярним.
+            </summary>
+        </member>
+        <member name="T:GraphAn.BLL.Models.ConnectivityResult">
+            <summary>
+            Числа зв'язності графа.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.ConnectivityResult.ComponentsCount">
+            <summary>
+            Отримує або задає кількість компонент зв'язності.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.ConnectivityResult.VertexConnectivity">
+            <summary>
+            Отримує або задає число вершинної зв'язності.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.ConnectivityResult.EdgeConnectivity">
+            <summary>
+            Отримує або задає число реберної зв'язності.
+            </summary>
+        </member>
+        <member name="T:GraphAn.BLL.Models.CycleAndChromaticResult">
+            <summary>
+            Інформація про найкоротший цикл та хроматичне число графа.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.CycleAndChromaticResult.HasCycle">
+            <summary>
+            Отримує або задає значення, що вказує чи має граф цикл.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.CycleAndChromaticResult.Girth">
+            <summary>
+            Отримує або задає обхват графа (довжина найкоротшого циклу).
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.CycleAndChromaticResult.CyclePath">
+            <summary>
+            Отримує або задає шлях найкоротшого циклу.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.CycleAndChromaticResult.ChromaticNumber">
+            <summary>
+            Отримує або задає хроматичне число графа.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.CycleAndChromaticResult.Coloring">
+            <summary>
+            Отримує або задає розфарбування вершин.
+            </summary>
+        </member>
+        <member name="T:GraphAn.BLL.Models.DijkstraResult">
+            <summary>
+            Результат виконання алгоритму Дейкстри.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.DijkstraResult.PathNodes">
+            <summary>
+            Отримує або задає список вершин шляху. (порядок вершин).
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.DijkstraResult.PathEdges">
+            <summary>
+            Отримує або задає список ідентифікаторів ребер шляху. (ребра шляху).
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.DijkstraResult.TotalWeight">
+            <summary>
+            Отримує або задає загальну вагу шляху.
+            </summary>
+        </member>
+        <member name="T:GraphAn.BLL.Models.EdgeDto">
+            <summary>
+            Модель ребра графа.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.EdgeDto.Id">
+            <summary>
+            Gets or sets ідентифікатор ребра.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.EdgeDto.From">
+            <summary>
+            Gets or sets ідентифікатор початкової вершини.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.EdgeDto.To">
+            <summary>
+            Gets or sets ідентифікатор кінцевої вершини.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.EdgeDto.Weight">
+            <summary>
+            Gets or sets вагу ребра.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.EdgeDto.HasWeight">
+            <summary>
+            Gets or sets a value indicating whether чи має ребро вагу.
+            </summary>
+        </member>
+        <member name="T:GraphAn.BLL.Models.FloydStep">
+            <summary>
+            Крок виконання алгоритму Флойда-Воршела.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.FloydStep.DistanceMatrix">
+            <summary>
+            Отримує або задає матрицю відстаней на поточному кроці.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.FloydStep.PredecessorMatrix">
+            <summary>
+            Отримує або задає матрицю попередників на поточному кроці.
+            </summary>
+        </member>
+        <member name="T:GraphAn.BLL.Models.FloydWarshallResult">
+            <summary>
+            Результат виконання алгоритму Флойда-Воршела.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.FloydWarshallResult.Steps">
+            <summary>
+            Отримує або задає кроки виконання алгоритму.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.FloydWarshallResult.Labels">
+            <summary>
+            Отримує або задає мітки вершин.
+            </summary>
+        </member>
+        <member name="T:GraphAn.BLL.Models.GraphDto">
+            <summary>
+            Модель графа для десеріалізації з JSON.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.GraphDto.Nodes">
+            <summary>
+            Отримує або задає список вершин графа.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.GraphDto.Edges">
+            <summary>
+            Отримує або задає список ребер графа.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.GraphDto.Directed">
+            <summary>
+            Отримує або задає чи є граф орієнтованим.
+            </summary>
+        </member>
+        <member name="T:GraphAn.BLL.Models.GraphInfoResult">
+            <summary>
+            Базова інформація про граф.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.GraphInfoResult.GraphType">
+            <summary>
+            Отримує або задає тип графа.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.GraphInfoResult.NodeCount">
+            <summary>
+            Отримує або задає кількість вершин.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.GraphInfoResult.EdgeCount">
+            <summary>
+            Отримує або задає кількість ребер.
+            </summary>
+        </member>
+        <member name="T:GraphAn.BLL.Models.GraphMetricsResult">
+            <summary>
+            Всі метрики графа.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.GraphMetricsResult.Info">
+            <summary>
+            Отримує або задає базову інформацію про граф.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.GraphMetricsResult.AdjacencyMatrix">
+            <summary>
+            Отримує або задає матрицю суміжності.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.GraphMetricsResult.IncidenceMatrix">
+            <summary>
+            Отримує або задає матрицю інцидентності.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.GraphMetricsResult.AdjacencyList">
+            <summary>
+            Отримує або задає список суміжності та степені вершин.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.GraphMetricsResult.CycleAndChromatic">
+            <summary>
+            Отримує або задає інформацію про цикл та хроматичне число.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.GraphMetricsResult.Connectivity">
+            <summary>
+            Отримує або задає числа зв'язності графа.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.GraphMetricsResult.IndependenceAndClique">
+            <summary>
+            Отримує або задає число незалежності та клікове число.
+            </summary>
+        </member>
+        <member name="T:GraphAn.BLL.Models.IndependenceAndCliqueResult">
+            <summary>
+            Число незалежності та клікове число графа.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.IndependenceAndCliqueResult.IndependenceNumber">
+            <summary>
+            Отримує або задає число незалежності графа.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.IndependenceAndCliqueResult.CliqueNumber">
+            <summary>
+            Отримує або задає клікове число графа.
+            </summary>
+        </member>
+        <member name="T:GraphAn.BLL.Models.NodeDto">
+            <summary>
+            Модель вершини графа.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.NodeDto.Id">
+            <summary>
+            Отримує або задає ідентифікатор вершини.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.NodeDto.Label">
+            <summary>
+            Отримує або задає мітку вершини.
+            </summary>
+        </member>
+        <member name="T:GraphAn.BLL.Models.TraversalEdge">
+            <summary>
+            Ребро дерева обходу графа.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.TraversalEdge.From">
+            <summary>
+            Отримує або задає ідентифікатор початкової вершини.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.TraversalEdge.To">
+            <summary>
+            Отримує або задає ідентифікатор кінцевої вершини.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.TraversalEdge.EdgeId">
+            <summary>
+            Отримує або задає ідентифікатор ребра.
+            </summary>
+        </member>
+        <member name="T:GraphAn.BLL.Models.TraversalResult">
+            <summary>
+            Результат виконання алгоритму обходу графа.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.TraversalResult.Protocol">
+            <summary>
+            Отримує або задає протокол обходу. (таблиця кроків з вершиною, номером кроку, стеком/чергою, ребром).
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.TraversalResult.TreeEdges">
+            <summary>
+            Отримує або задає список ребер дерева обходу. (ребра дерева обходу).
+            </summary>
+        </member>
+        <member name="T:GraphAn.BLL.Models.TraversalStep">
+            <summary>
+            Крок обходу графа.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.TraversalStep.Vertex">
+            <summary>
+            Отримує або задає мітку поточної вершини.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.TraversalStep.StepNumber">
+            <summary>
+            Отримує або задає номер кроку обходу.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.TraversalStep.Collection">
+            <summary>
+            Отримує або задає поточний стан черги або стека.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.TraversalStep.TreeEdge">
+            <summary>
+            Отримує або задає ребро дерева обходу.
+            </summary>
+        </member>
+        <member name="P:GraphAn.BLL.Models.TraversalStep.EdgeId">
+            <summary>
+            Отримує або задає ідентифікатор ребра.
+            </summary>
+        </member>
+        <member name="T:GraphAn.BLL.Services.AlgorithmService">
+            <summary>
+            Сервіс для виконання алгоритмів на графі.
+            </summary>
+        </member>
+        <member name="M:GraphAn.BLL.Services.AlgorithmService.#ctor(Microsoft.Extensions.Logging.ILogger{GraphAn.BLL.Services.AlgorithmService})">
+            <summary>
+            Initializes a new instance of the <see cref="T:GraphAn.BLL.Services.AlgorithmService"/> class.
+            </summary>
+            <param name="logger">Об'єкт логера.</param>
+        </member>
+        <member name="M:GraphAn.BLL.Services.AlgorithmService.RunDijkstraAsync(GraphAn.BLL.Models.GraphDto,System.String,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:GraphAn.BLL.Services.AlgorithmService.RunFloydWarshallAsync(GraphAn.BLL.Models.GraphDto)">
+            <inheritdoc/>
+        </member>
+        <member name="M:GraphAn.BLL.Services.AlgorithmService.RunDfsAsync(GraphAn.BLL.Models.GraphDto,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:GraphAn.BLL.Services.AlgorithmService.RunBfsAsync(GraphAn.BLL.Models.GraphDto,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:GraphAn.BLL.Services.AlgorithmService.ValidateTraversal(GraphAn.BLL.Models.GraphDto,System.String)">
+            <summary>
+            Перевіряє граф та початкову вершину перед обходом.
+            </summary>
+            <param name="graph">Модель графа.</param>
+            <param name="startId">Ідентифікатор початкової вершини.</param>
+            <returns>Повідомлення про помилку або <see langword="null"/> якщо все коректно.</returns>
+        </member>
+        <member name="M:GraphAn.BLL.Services.AlgorithmService.BuildAdjList(GraphAn.BLL.Models.GraphDto)">
+            <summary>
+            Будує список суміжності з ребрами.
+            </summary>
+            <param name="graph">Модель графа.</param>
+            <returns>Список суміжності.</returns>
+        </member>
+        <member name="M:GraphAn.BLL.Services.AlgorithmService.GetFloydSnapshot(System.Double[0:,0:],System.Int32[0:,0:],System.Int32)">
+            <summary>
+            Створює знімок матриць на поточному кроці алгоритму Флойда-Воршела.
+            </summary>
+            <param name="dist">Матриця відстаней.</param>
+            <param name="pred">Матриця попередників.</param>
+            <param name="n">Розмір матриці.</param>
+            <returns>Знімок поточного кроку.</returns>
+        </member>
+        <member name="T:GraphAn.BLL.Services.EmailService">
+            <summary>
+            Сервіс для реалізації методів роботи з Email.
+            </summary>
+        </member>
+        <member name="M:GraphAn.BLL.Services.EmailService.#ctor(Microsoft.Extensions.Logging.ILogger{GraphAn.BLL.Services.EmailService},GraphAn.DAL.Repositories.IUserRepository,GraphAn.DAL.Repositories.IRegistrationRepository,Microsoft.AspNetCore.Identity.UserManager{GraphAn.DAL.Models.User})">
+            <summary>
+            Initializes a new instance of the <see cref="T:GraphAn.BLL.Services.EmailService"/> class.
+            </summary>
+            <param name="logger">Об'єкт логера.</param>
+            <param name="userRepository">Об'єкт репозиторію користувача.</param>
+            <param name="registrationRepository">Об'єкт репозиторію реєстрації.</param>
+            <param name="userManager">Менеджер користувачів Identity.</param>
+        </member>
+        <member name="M:GraphAn.BLL.Services.EmailService.StartRegistrationAsync(System.String,System.String,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:GraphAn.BLL.Services.EmailService.ConfirmRegistrationAsync(System.String,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:GraphAn.BLL.Services.EmailService.ForgotPasswordAsync(System.String,System.Func{System.String,System.String,System.String})">
+            <inheritdoc/>
+        </member>
+        <member name="M:GraphAn.BLL.Services.EmailService.ResetPasswordAsync(System.String,System.String,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:GraphAn.BLL.Services.EmailService.SendVerificationCodeAsync(System.String,System.String)">
+            <summary>
+            Надсилає код підтвердження на електронну пошту користувача.
+            </summary>
+            <param name="email">Електронна адреса отримувача.</param>
+            <param name="code">6-значний код підтвердження.</param>
+            <returns><see langword="true"/> якщо лист успішно відправлено; інакше <see langword="false"/>.</returns>
+        </member>
+        <member name="M:GraphAn.BLL.Services.EmailService.SendEmailAsync(System.String,System.String,System.String)">
+            <summary>
+            Надсилає електронний лист через SMTP сервер Gmail.
+            </summary>
+            <param name="toEmail">Електронна адреса отримувача.</param>
+            <param name="subject">Тема листа.</param>
+            <param name="bodyHtml">HTML-вміст листа.</param>
+            <returns><see langword="true"/> якщо лист успішно відправлено; інакше <see langword="false"/>.</returns>
+        </member>
+        <member name="T:GraphAn.BLL.Services.GraphMetricsService">
+            <summary>
+            Сервіс для обчислення метрик графа.
+            </summary>
+        </member>
+        <member name="M:GraphAn.BLL.Services.GraphMetricsService.#ctor(Microsoft.Extensions.Logging.ILogger{GraphAn.BLL.Services.GraphMetricsService})">
+            <summary>
+            Initializes a new instance of the <see cref="T:GraphAn.BLL.Services.GraphMetricsService"/> class.
+            </summary>
+            <param name="logger">Об'єкт логера.</param>
+        </member>
+        <member name="M:GraphAn.BLL.Services.GraphMetricsService.GetGraphInfo(GraphAn.BLL.Models.GraphDto)">
+            <inheritdoc/>
+        </member>
+        <member name="M:GraphAn.BLL.Services.GraphMetricsService.GetAdjacencyMatrix(GraphAn.BLL.Models.GraphDto)">
+            <inheritdoc/>
+        </member>
+        <member name="M:GraphAn.BLL.Services.GraphMetricsService.GetIncidenceMatrix(GraphAn.BLL.Models.GraphDto)">
+            <inheritdoc/>
+        </member>
+        <member name="M:GraphAn.BLL.Services.GraphMetricsService.GetAdjacencyList(GraphAn.BLL.Models.GraphDto)">
+            <inheritdoc/>
+        </member>
+        <member name="M:GraphAn.BLL.Services.GraphMetricsService.GetCycleAndChromatic(GraphAn.BLL.Models.GraphDto)">
+            <inheritdoc/>
+        </member>
+        <member name="M:GraphAn.BLL.Services.GraphMetricsService.GetConnectivity(GraphAn.BLL.Models.GraphDto)">
+            <inheritdoc/>
+        </member>
+        <member name="M:GraphAn.BLL.Services.GraphMetricsService.GetIndependenceAndClique(GraphAn.BLL.Models.GraphDto)">
+            <inheritdoc/>
+        </member>
+        <member name="M:GraphAn.BLL.Services.GraphMetricsService.GetAllMetrics(GraphAn.BLL.Models.GraphDto)">
+            <inheritdoc/>
+        </member>
+        <member name="M:GraphAn.BLL.Services.GraphMetricsService.IsConnected(System.Collections.Generic.HashSet{System.String},System.Collections.Generic.List{GraphAn.BLL.Models.EdgeDto})">
+            <summary>
+            Перевіряє чи є граф зв'язним після видалення вершин або ребер.
+            </summary>
+            <param name="nodes">Множина вершин.</param>
+            <param name="edges">Список ребер.</param>
+            <returns><see langword="true"/> якщо граф зв'язний; інакше <see langword="false"/>.</returns>
+        </member>
+        <member name="M:GraphAn.BLL.Services.GraphMetricsService.MaxFlowBetweenVertices(GraphAn.BLL.Models.GraphDto,System.String,System.String)">
+            <summary>
+            Обчислює максимальний потік між двома вершинами в неорієнтованому графі (алгоритм Едмондса-Карпа).
+            </summary>
+            <param name="graph">Граф.</param>
+            <param name="source">Вершина-джерело.</param>
+            <param name="sink">Вершина-стік.</param>
+            <returns>Максимальний потік (ціле число).</returns>
+        </member>
+        <member name="T:GraphAn.BLL.Services.ProjectService">
+            <summary>
+            Сервіс для роботи з проєктами.
+            </summary>
+        </member>
+        <member name="M:GraphAn.BLL.Services.ProjectService.#ctor(Microsoft.Extensions.Logging.ILogger{GraphAn.BLL.Services.ProjectService},GraphAn.DAL.Repositories.IProjectRepository)">
+            <summary>
+            Initializes a new instance of the <see cref="T:GraphAn.BLL.Services.ProjectService"/> class.
+            </summary>
+            <param name="logger">Об'єкт логера.</param>
+            <param name="projectRepository">Об'єкт репозиторію проєктів.</param>
+        </member>
+        <member name="M:GraphAn.BLL.Services.ProjectService.CreateProjectAsync(System.Guid,System.String)">
+            <summary>
+            Створює новий порожній проєкт.
+            </summary>
+            <param name="userId">Ідентифікатор користувача.</param>
+            <param name="name">Назва проєкту.</param>
+            <returns>
+            Кортеж, де <c>Success</c> — результат операції,
+            <c>Message</c> — опис результату або помилки,
+            <c>ProjectId</c> — ідентифікатор створеного проєкту.
+            </returns>
+        </member>
+        <member name="M:GraphAn.BLL.Services.ProjectService.SaveProjectAsync(System.Guid,System.Guid,System.String,System.String)">
+            <summary>
+            Зберігає назву та дані графа існуючого проєкту.
+            </summary>
+            <param name="userId">Ідентифікатор користувача.</param>
+            <param name="projectId">Ідентифікатор проєкту.</param>
+            <param name="name">Нова назва проєкту.</param>
+            <param name="graphData">Дані графа у форматі JSON.</param>
+            <returns>
+            Кортеж, де <c>Success</c> — результат операції,
+            <c>Message</c> — опис результату або помилки.
+            </returns>
+        </member>
+        <member name="M:GraphAn.BLL.Services.ProjectService.GetProjectsAsync(System.Guid)">
+            <summary>
+            Отримує список проектів користувача без даних графа.
+            </summary>
+            <param name="userId">Ідентифікатор користувача.</param>
+            <returns>
+            Кортеж, де <c>Success</c> — результат операції,
+            <c>Message</c> — опис результату або помилки,
+            <c>Projects</c> — список проектів користувача.
+            </returns>
+        </member>
+        <member name="M:GraphAn.BLL.Services.ProjectService.GetProjectAsync(System.Guid,System.Guid)">
+            <summary>
+            Отримує проект з даними графа за ідентифікатором.
+            </summary>
+            <param name="userId">Ідентифікатор користувача.</param>
+            <param name="projectId">Ідентифікатор проекту.</param>
+            <returns>
+            Кортеж, де <c>Success</c> — результат операції,
+            <c>Message</c> — опис результату або помилки,
+            <c>Project</c> — проект з даними графа.
+            </returns>
+        </member>
+        <member name="M:GraphAn.BLL.Services.ProjectService.DeleteProjectAsync(System.Guid,System.Guid)">
+            <summary>
+            Видаляє проект користувача за ідентифікатором.
+            </summary>
+            <param name="userId">Ідентифікатор користувача.</param>
+            <param name="projectId">Ідентифікатор проекту.</param>
+            <returns>
+            Кортеж, де <c>Success</c> — результат операції,
+            <c>Message</c> — опис результату або помилки.
+            </returns>
+        </member>
+    </members>
+</doc>

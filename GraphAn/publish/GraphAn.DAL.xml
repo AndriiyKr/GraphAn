@@ -1,0 +1,471 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>GraphAn.DAL</name>
+    </assembly>
+    <members>
+        <member name="T:GraphAn.DAL.Context.AppDbContext">
+            <summary>
+            Основний контекст бази даних додатка для взаємодії з PostgreSQL через Entity Framework Core.
+            </summary>
+        </member>
+        <member name="F:GraphAn.DAL.Context.AppDbContext.cachedConnection">
+            <summary>
+            Статичне поле для кешування рядка підключення.
+            </summary>
+        </member>
+        <member name="F:GraphAn.DAL.Context.AppDbContext.logger">
+            <summary>
+            Логер для запису подій всередині шару доступу до даних.
+            </summary>
+        </member>
+        <member name="M:GraphAn.DAL.Context.AppDbContext.#ctor(Microsoft.Extensions.Logging.ILogger{GraphAn.DAL.Context.AppDbContext},Microsoft.EntityFrameworkCore.DbContextOptions{GraphAn.DAL.Context.AppDbContext})">
+            <summary>
+            Initializes a new instance of the <see cref="T:GraphAn.DAL.Context.AppDbContext"/> class.
+            Конструктор для використання в системі Dependency Injection.
+            Автоматично отримує налаштовані параметри контексту та сервіс логування.
+            </summary>
+            <param name="logger">Сервіс логування.</param>
+            <param name="options">Налаштування конфігурації DbContext.</param>
+        </member>
+        <member name="M:GraphAn.DAL.Context.AppDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{GraphAn.DAL.Context.AppDbContext})">
+            <summary>
+            Initializes a new instance of the <see cref="T:GraphAn.DAL.Context.AppDbContext"/> class.
+            </summary>
+            <param name="options">Налаштування конфігурації DbContext.</param>
+        </member>
+        <member name="M:GraphAn.DAL.Context.AppDbContext.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:GraphAn.DAL.Context.AppDbContext"/> class.
+            </summary>
+        </member>
+        <member name="P:GraphAn.DAL.Context.AppDbContext.Projects">
+            <summary>
+            Gets or sets набір проєктів.
+            </summary>
+        </member>
+        <member name="P:GraphAn.DAL.Context.AppDbContext.Registrations">
+            <summary>
+            Gets or sets набір реєстрацій.
+            </summary>
+        </member>
+        <member name="M:GraphAn.DAL.Context.AppDbContext.OnConfiguring(Microsoft.EntityFrameworkCore.DbContextOptionsBuilder)">
+            <summary>
+            Конфігурує параметри підключення до бази даних, якщо вони не були задані ззовні.
+            Використовує бібліотеку DotNetEnv для зчитування змінних середовища та налаштовує
+             підключення до PostgreSQL з розширеним логуванням для режиму розробки.
+            </summary>
+            <param name="optionsBuilder">Будівельник параметрів, що дозволяє вибрати провайдер БД та налаштувати поведінку контексту.</param>
+        </member>
+        <member name="M:GraphAn.DAL.Context.AppDbContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <summary>
+            Конфігурація моделі та зв'язків між сутностями.
+            </summary>
+            <param name="modelBuilder">Builder для моделі EF.</param>
+        </member>
+        <member name="T:GraphAn.DAL.Repositories.IGenericRepository`1">
+            <summary>
+            Базовий інтерфейс репозиторію для CRUD операцій.
+            </summary>
+            <typeparam name="T">Тип сутності.</typeparam>
+        </member>
+        <member name="M:GraphAn.DAL.Repositories.IGenericRepository`1.GetAllAsync">
+            <summary>
+            Отримує всі сутності.
+            </summary>
+            <returns>Список всіх сутностей типу <typeparamref name="T"/>.</returns>
+        </member>
+        <member name="M:GraphAn.DAL.Repositories.IGenericRepository`1.GetByIdAsync(System.Object)">
+            <summary>
+            Отримує сутність за ідентифікатором.
+            </summary>
+            <param name="id">Ідентифікатор сутності.</param>
+            <returns>Сутність типу <typeparamref name="T"/>, або <see langword="null"/>, якщо не знайдено.</returns>
+        </member>
+        <member name="M:GraphAn.DAL.Repositories.IGenericRepository`1.AddAsync(`0)">
+            <summary>
+            Додає нову сутність.
+            </summary>
+            <param name="entity">Сутність для додавання.</param>
+            <returns>Кількість записів, змінених у базі даних (зазвичай 1).</returns>
+        </member>
+        <member name="M:GraphAn.DAL.Repositories.IGenericRepository`1.UpdateAsync(`0)">
+            <summary>
+            Оновлює існуючу сутність.
+            </summary>
+            <param name="entity">Сутність з оновленими даними.</param>
+            <returns>Кількість записів, змінених у базі даних (зазвичай 1).</returns>
+        </member>
+        <member name="M:GraphAn.DAL.Repositories.IGenericRepository`1.DeleteAsync(`0)">
+            <summary>
+            Видаляє сутність.
+            </summary>
+            <param name="entity">Сутність для видалення.</param>
+            <returns>Кількість записів, змінених у базі даних (зазвичай 1).</returns>
+        </member>
+        <member name="T:GraphAn.DAL.Repositories.IProjectRepository">
+            <summary>
+            Інтерфейс репозиторію для роботи з проєктами.
+            </summary>
+        </member>
+        <member name="M:GraphAn.DAL.Repositories.IProjectRepository.GetByUserIdAsync(System.Guid)">
+            <summary>
+            Отримує всі проєкти користувача.
+            </summary>
+            <param name="userId">Ідентифікатор користувача.</param>
+            <returns>Список проєктів, що належать вказаному користувачеві.</returns>
+        </member>
+        <member name="M:GraphAn.DAL.Repositories.IProjectRepository.GetByIdAndUserIdAsync(System.Guid,System.Guid)">
+            <summary>
+            Отримує проєкт за ідентифікатором проєкту та користувача.
+            </summary>
+            <param name="projectId">Ідентифікатор проєкту.</param>
+            <param name="userId">Ідентифікатор користувача.</param>
+            <returns>Проєкт, якщо знайдено, інакше <see langword="null"/>.</returns>
+        </member>
+        <member name="M:GraphAn.DAL.Repositories.IProjectRepository.GetProjectsByUserIdAsync(System.Guid)">
+            <summary>
+            Отримує список проєктів користувача без даних графа (лише метадані).
+            </summary>
+            <param name="userId">Ідентифікатор користувача.</param>
+            <returns>Список проєктів без поля GraphData.</returns>
+        </member>
+        <member name="T:GraphAn.DAL.Repositories.IRegistrationRepository">
+            <summary>
+            Інтерфейс репозиторію для тимчасових реєстрацій.
+            </summary>
+        </member>
+        <member name="M:GraphAn.DAL.Repositories.IRegistrationRepository.IfEmailExistsAsync(System.String)">
+            <summary>
+            Перевіряє, чи існує тимчасова реєстрація з вказаним email.
+            </summary>
+            <param name="email">Електронна пошта.</param>
+            <returns><see langword="true"/>, якщо реєстрація існує, інакше <see langword="false"/>.</returns>
+        </member>
+        <member name="M:GraphAn.DAL.Repositories.IRegistrationRepository.GetByEmailAsync(System.String)">
+            <summary>
+            Отримує тимчасову реєстрацію за email.
+            </summary>
+            <param name="email">Електронна пошта.</param>
+            <returns>Об'єкт <see cref="T:GraphAn.DAL.Models.Registration"/>, якщо знайдено, інакше <see langword="null"/>.</returns>
+        </member>
+        <member name="T:GraphAn.DAL.Repositories.IUserRepository">
+            <summary>
+            Інтерфейс репозиторію для роботи з користувачами.
+            </summary>
+        </member>
+        <member name="M:GraphAn.DAL.Repositories.IUserRepository.GetByEmailAsync(System.String)">
+            <summary>
+            Отримує користувача за електронною поштою.
+            </summary>
+            <param name="email">Електронна пошта.</param>
+            <returns>Користувач, якщо знайдено, інакше <see langword="null"/>.</returns>
+        </member>
+        <member name="M:GraphAn.DAL.Repositories.IUserRepository.GetByUsernameAsync(System.String)">
+            <summary>
+            Отримує користувача за ім'ям користувача.
+            </summary>
+            <param name="username">Ім'я користувача.</param>
+            <returns>Користувач, якщо знайдено, інакше <see langword="null"/>.</returns>
+        </member>
+        <member name="M:GraphAn.DAL.Repositories.IUserRepository.IfEmailExistsAsync(System.String)">
+            <summary>
+            Перевіряє, чи існує користувач з вказаною електронною поштою.
+            </summary>
+            <param name="email">Електронна пошта.</param>
+            <returns><see langword="true"/>, якщо користувач існує, інакше <see langword="false"/>.</returns>
+        </member>
+        <member name="M:GraphAn.DAL.Repositories.IUserRepository.IfUsernameExistsAsync(System.String)">
+            <summary>
+            Перевіряє, чи існує користувач з вказаним ім'ям.
+            </summary>
+            <param name="username">Ім'я користувача.</param>
+            <returns><see langword="true"/>, якщо користувач існує, інакше <see langword="false"/>.</returns>
+        </member>
+        <member name="T:GraphAn.DAL.Repositories.GenericRepository`1">
+            <summary>
+            Represents a generic repository that provides basic CRUD operations for entities.
+            </summary>
+            <typeparam name="T">The type of the entity.</typeparam>
+        </member>
+        <member name="F:GraphAn.DAL.Repositories.GenericRepository`1.context">
+            <summary>
+            The database context used for data access.
+            </summary>
+        </member>
+        <member name="F:GraphAn.DAL.Repositories.GenericRepository`1.dbSet">
+            <summary>
+            The database set for the entity type.
+            </summary>
+        </member>
+        <member name="M:GraphAn.DAL.Repositories.GenericRepository`1.#ctor(GraphAn.DAL.Context.AppDbContext)">
+            <summary>
+            Initializes a new instance of the <see cref="T:GraphAn.DAL.Repositories.GenericRepository`1"/> class.
+            </summary>
+            <param name="context">The database context used for data operations. Cannot be <see langword="null"/>.</param>
+        </member>
+        <member name="P:GraphAn.DAL.Repositories.GenericRepository`1.Context">
+            <summary>
+            Gets the database context for derived classes.
+            </summary>
+        </member>
+        <member name="P:GraphAn.DAL.Repositories.GenericRepository`1.DbSet">
+            <summary>
+            Gets the database set for derived classes.
+            </summary>
+        </member>
+        <member name="M:GraphAn.DAL.Repositories.GenericRepository`1.GetAllAsync">
+            <summary>
+            Retrieves all entities from the data source.
+            </summary>
+            <returns>
+            A task that represents the asynchronous operation.
+            The task result contains a list of all entities.
+            </returns>
+        </member>
+        <member name="M:GraphAn.DAL.Repositories.GenericRepository`1.GetByIdAsync(System.Object)">
+            <summary>
+            Retrieves an entity by its identifier.
+            </summary>
+            <param name="id">The identifier of the entity.</param>
+            <returns>
+            A task that represents the asynchronous operation.
+            The task result contains the entity if found; otherwise, <see langword="null"/>.
+            </returns>
+        </member>
+        <member name="M:GraphAn.DAL.Repositories.GenericRepository`1.AddAsync(`0)">
+            <summary>
+            Adds a new entity to the data source.
+            </summary>
+            <param name="entity">The entity to add.</param>
+            <returns>
+            A task that represents the asynchronous operation.
+            The task result contains the number of state entries written to the database.
+            </returns>
+        </member>
+        <member name="M:GraphAn.DAL.Repositories.GenericRepository`1.UpdateAsync(`0)">
+            <summary>
+            Updates an existing entity in the data source.
+            </summary>
+            <param name="entity">The entity to update.</param>
+            <returns>
+            A task that represents the asynchronous operation.
+            The task result contains the number of state entries written to the database.
+            </returns>
+        </member>
+        <member name="M:GraphAn.DAL.Repositories.GenericRepository`1.DeleteAsync(`0)">
+            <summary>
+            Deletes an entity from the data source.
+            </summary>
+            <param name="entity">The entity to delete.</param>
+            <returns>
+            A task that represents the asynchronous operation.
+            The task result contains the number of state entries written to the database.
+            </returns>
+        </member>
+        <member name="T:GraphAn.DAL.Repositories.ProjectRepository">
+            <summary>
+            Represents a Project repository.
+            </summary>
+        </member>
+        <member name="M:GraphAn.DAL.Repositories.ProjectRepository.#ctor(GraphAn.DAL.Context.AppDbContext)">
+            <summary>
+            Initializes a new instance of the <see cref="T:GraphAn.DAL.Repositories.ProjectRepository"/> class.
+            </summary>
+            <param name="context">The database context used for data operations. Cannot be <see langword="null"/>.</param>
+        </member>
+        <member name="M:GraphAn.DAL.Repositories.ProjectRepository.GetByUserIdAsync(System.Guid)">
+            <summary>
+            Отримує всі проекти користувача за його ідентифікатором.
+            </summary>
+            <param name="userId">Ідентифікатор користувача.</param>
+            <returns>Список проектів користувача.</returns>
+        </member>
+        <member name="M:GraphAn.DAL.Repositories.ProjectRepository.GetByIdAndUserIdAsync(System.Guid,System.Guid)">
+            <summary>
+            Отримує проект за його ідентифікатором та ідентифікатором користувача.
+            </summary>
+            <param name="projectId">Ідентифікатор проекту.</param>
+            <param name="userId">Ідентифікатор користувача.</param>
+            <returns><see cref="T:GraphAn.DAL.Models.Project"/> якщо знайдено; інакше <see langword="null"/>.</returns>
+        </member>
+        <member name="M:GraphAn.DAL.Repositories.ProjectRepository.GetProjectsByUserIdAsync(System.Guid)">
+            <summary>
+            Отримує список проектів користувача без даних графа.
+            </summary>
+            <param name="userId">Ідентифікатор користувача.</param>
+            <returns>Список проектів користувача.</returns>
+        </member>
+        <member name="T:GraphAn.DAL.Repositories.RegistrationRepository">
+            <summary>
+            Represents a Registration repository.
+            </summary>
+        </member>
+        <member name="M:GraphAn.DAL.Repositories.RegistrationRepository.#ctor(GraphAn.DAL.Context.AppDbContext)">
+            <summary>
+            Initializes a new instance of the <see cref="T:GraphAn.DAL.Repositories.RegistrationRepository"/> class.
+            </summary>
+            <param name="context">The database context used for data operations. Cannot be <see langword="null"/>.</param>
+        </member>
+        <member name="M:GraphAn.DAL.Repositories.RegistrationRepository.IfEmailExistsAsync(System.String)">
+            <summary>
+            Перевірка існування реєстрації з переданим email.
+            </summary>
+            <param name="email">email користувача.</param>
+            <returns> <see langword="true"/> якщо знайдено; інакше <see langword="false"/>.</returns>
+        </member>
+        <member name="M:GraphAn.DAL.Repositories.RegistrationRepository.GetByEmailAsync(System.String)">
+            <summary>
+            Отримання реєстрації за email.
+            </summary>
+            <param name="email">email користувача.</param>
+            <returns> <see cref="T:GraphAn.DAL.Models.Registration"/> якщо знайдено; інакше <see langword="null"/>.</returns>
+        </member>
+        <member name="T:GraphAn.DAL.Repositories.UserRepository">
+            <summary>
+            Represents a User repository.
+            </summary>
+        </member>
+        <member name="M:GraphAn.DAL.Repositories.UserRepository.#ctor(GraphAn.DAL.Context.AppDbContext)">
+            <summary>
+            Initializes a new instance of the <see cref="T:GraphAn.DAL.Repositories.UserRepository"/> class.
+            </summary>
+            <param name="context">The database context used for data operations. Cannot be <see langword="null"/>.</param>
+        </member>
+        <member name="M:GraphAn.DAL.Repositories.UserRepository.GetByEmailAsync(System.String)">
+            <summary>
+            Отримання користувача за email.
+            </summary>
+            <param name="email">email користувача.</param>
+            <returns> <see cref="T:GraphAn.DAL.Models.User"/> якщо знайдено; інакше <see langword="null"/>.</returns>
+        </member>
+        <member name="M:GraphAn.DAL.Repositories.UserRepository.GetByUsernameAsync(System.String)">
+            <summary>
+            Отримання користувача за username.
+            </summary>
+            <param name="username">username користувача.</param>
+            <returns> <see cref="T:GraphAn.DAL.Models.User"/> якщо знайдено; інакше <see langword="null"/>.</returns>
+        </member>
+        <member name="M:GraphAn.DAL.Repositories.UserRepository.IfEmailExistsAsync(System.String)">
+            <summary>
+            Перевірка існування користувача з переданим email.
+            </summary>
+            <param name="email">email користувача.</param>
+            <returns> <see langword="true"/> якщо знайдено; інакше <see langword="false"/>.</returns>
+        </member>
+        <member name="M:GraphAn.DAL.Repositories.UserRepository.IfUsernameExistsAsync(System.String)">
+            <summary>
+            Перевірка існування користувача з переданим іменем.
+            </summary>
+            <param name="username">Ім'я користувача.</param>
+            <returns><see langword="true"/> якщо знайдено; інакше <see langword="false"/>.</returns>
+        </member>
+        <member name="T:GraphAn.DAL.Migrations.InitialIdentity">
+            <inheritdoc />
+        </member>
+        <member name="M:GraphAn.DAL.Migrations.InitialIdentity.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:GraphAn.DAL.Migrations.InitialIdentity.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:GraphAn.DAL.Migrations.InitialIdentity.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:GraphAn.DAL.Models.Project">
+            <summary>
+            Представляє проект з даними графа.
+            </summary>
+        </member>
+        <member name="P:GraphAn.DAL.Models.Project.Id">
+            <summary>
+            Отримує або задає унікальний ідентифікатор проекту.
+            </summary>
+        </member>
+        <member name="P:GraphAn.DAL.Models.Project.UserId">
+            <summary>
+            Отримує або задає ідентифікатор власника проекту.
+            </summary>
+        </member>
+        <member name="P:GraphAn.DAL.Models.Project.Name">
+            <summary>
+            Отримує або задає назву проекту.
+            </summary>
+        </member>
+        <member name="P:GraphAn.DAL.Models.Project.GraphData">
+            <summary>
+            Отримує або задає дані графа у форматі JSON.
+            </summary>
+        </member>
+        <member name="P:GraphAn.DAL.Models.Project.CreatedAt">
+            <summary>
+            Отримує або задає час створення.
+            </summary>
+        </member>
+        <member name="P:GraphAn.DAL.Models.Project.UpdatedAt">
+            <summary>
+            Отримує або задає час останнього оновлення.
+            </summary>
+        </member>
+        <member name="P:GraphAn.DAL.Models.Project.User">
+            <summary>
+            Отримує або задає навігаційну властивість до користувача.
+            </summary>
+        </member>
+        <member name="T:GraphAn.DAL.Models.Registration">
+            <summary>
+            Представляє тимчасову транзакцію реєстрації користувача.
+            </summary>
+        </member>
+        <member name="P:GraphAn.DAL.Models.Registration.Id">
+            <summary>
+            Отримує або задає ідентифікатор транзакції.
+            </summary>
+        </member>
+        <member name="P:GraphAn.DAL.Models.Registration.Email">
+            <summary>
+            Отримує або задає електронну пошту для реєстрації.
+            </summary>
+        </member>
+        <member name="P:GraphAn.DAL.Models.Registration.VerificationCode">
+            <summary>
+            Отримує або задає код верифікації.
+            </summary>
+        </member>
+        <member name="P:GraphAn.DAL.Models.Registration.CodeExpiryTime">
+            <summary>
+            Отримує або задає час закінчення дії коду.
+            </summary>
+        </member>
+        <member name="P:GraphAn.DAL.Models.Registration.TempPasswordHash">
+            <summary>
+            Отримує або задає тимчасово збережений пароль.
+            </summary>
+        </member>
+        <member name="P:GraphAn.DAL.Models.Registration.TempUsername">
+            <summary>
+            Отримує або задає тимчасовий нікнейм.
+            </summary>
+        </member>
+        <member name="T:GraphAn.DAL.Models.User">
+            <summary>
+            Представляє користувача системи.
+            </summary>
+        </member>
+        <member name="M:GraphAn.DAL.Models.User.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:GraphAn.DAL.Models.User"/> class.
+            </summary>
+        </member>
+        <member name="P:GraphAn.DAL.Models.User.CreatedAt">
+            <summary>
+            Отримує або задає дату створення акаунту.
+            </summary>
+        </member>
+        <member name="P:GraphAn.DAL.Models.User.Projects">
+            <summary>
+            Отримує або задає список проектів, що належать користувачу.
+            </summary>
+        </member>
+    </members>
+</doc>

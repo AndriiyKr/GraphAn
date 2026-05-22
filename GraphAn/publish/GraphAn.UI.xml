@@ -1,0 +1,693 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>GraphAn.UI</name>
+    </assembly>
+    <members>
+        <member name="T:GraphAn.Controllers.AnalysisController">
+            <summary>
+            Контролер для аналізу графів.
+            </summary>
+        </member>
+        <member name="M:GraphAn.Controllers.AnalysisController.#ctor(GraphAn.BLL.Interfaces.IGraphMetricsService,GraphAn.BLL.Interfaces.IAlgorithmService)">
+            <summary>
+            Initializes a new instance of the <see cref="T:GraphAn.Controllers.AnalysisController"/> class.
+            </summary>
+            <param name="graphMetricsService">Сервіс для обчислення метрик графа.</param>
+            <param name="algorithmService">Сервіс для виконання алгоритмів на графі.</param>
+        </member>
+        <member name="M:GraphAn.Controllers.AnalysisController.GetGraphInfo(GraphAn.UI.ViewModels.GraphRequest)">
+            <summary>
+            Отримує базову інформацію про граф.
+            </summary>
+            <param name="request">Дані графа.</param>
+            <returns>
+            <see cref="T:Microsoft.AspNetCore.Mvc.OkObjectResult"/> з базовою інформацією про граф,
+            або <see cref="T:Microsoft.AspNetCore.Mvc.BadRequestObjectResult"/> з описом помилки.
+            </returns>
+        </member>
+        <member name="M:GraphAn.Controllers.AnalysisController.GetAdjacencyMatrix(GraphAn.UI.ViewModels.GraphRequest)">
+            <summary>
+            Обчислює матрицю суміжності графа.
+            </summary>
+            <param name="request">Дані графа.</param>
+            <returns>
+            <see cref="T:Microsoft.AspNetCore.Mvc.OkObjectResult"/> з матрицею суміжності,
+            або <see cref="T:Microsoft.AspNetCore.Mvc.BadRequestObjectResult"/> з описом помилки.
+            </returns>
+        </member>
+        <member name="M:GraphAn.Controllers.AnalysisController.GetIncidenceMatrix(GraphAn.UI.ViewModels.GraphRequest)">
+            <summary>
+            Обчислює матрицю інцидентності графа.
+            </summary>
+            <param name="request">Дані графа.</param>
+            <returns>
+            <see cref="T:Microsoft.AspNetCore.Mvc.OkObjectResult"/> з матрицею інцидентності,
+            або <see cref="T:Microsoft.AspNetCore.Mvc.BadRequestObjectResult"/> з описом помилки.
+            </returns>
+        </member>
+        <member name="M:GraphAn.Controllers.AnalysisController.GetAdjacencyList(GraphAn.UI.ViewModels.GraphRequest)">
+            <summary>
+            Отримує список суміжності та степені вершин графа.
+            </summary>
+            <param name="request">Дані графа.</param>
+            <returns>
+            <see cref="T:Microsoft.AspNetCore.Mvc.OkObjectResult"/> зі списком суміжності,
+            або <see cref="T:Microsoft.AspNetCore.Mvc.BadRequestObjectResult"/> з описом помилки.
+            </returns>
+        </member>
+        <member name="M:GraphAn.Controllers.AnalysisController.GetCycleAndChromatic(GraphAn.UI.ViewModels.GraphRequest)">
+            <summary>
+            Знаходить найкоротший цикл та хроматичне число графа.
+            </summary>
+            <param name="request">Дані графа.</param>
+            <returns>
+            <see cref="T:Microsoft.AspNetCore.Mvc.OkObjectResult"/> з інформацією про цикл та хроматичне число,
+            або <see cref="T:Microsoft.AspNetCore.Mvc.BadRequestObjectResult"/> з описом помилки.
+            </returns>
+        </member>
+        <member name="M:GraphAn.Controllers.AnalysisController.GetConnectivity(GraphAn.UI.ViewModels.GraphRequest)">
+            <summary>
+            Обчислює числа реберної та вершинної зв'язності графа.
+            </summary>
+            <param name="request">Дані графа.</param>
+            <returns>
+            <see cref="T:Microsoft.AspNetCore.Mvc.OkObjectResult"/> з числами зв'язності,
+            або <see cref="T:Microsoft.AspNetCore.Mvc.BadRequestObjectResult"/> з описом помилки.
+            </returns>
+        </member>
+        <member name="M:GraphAn.Controllers.AnalysisController.GetIndependenceAndClique(GraphAn.UI.ViewModels.GraphRequest)">
+            <summary>
+            Обчислює число незалежності та клікове число графа.
+            </summary>
+            <param name="request">Дані графа.</param>
+            <returns>
+            <see cref="T:Microsoft.AspNetCore.Mvc.OkObjectResult"/> з числом незалежності та кліковим числом,
+            або <see cref="T:Microsoft.AspNetCore.Mvc.BadRequestObjectResult"/> з описом помилки.
+            </returns>
+        </member>
+        <member name="M:GraphAn.Controllers.AnalysisController.GetAllMetrics(GraphAn.UI.ViewModels.GraphRequest)">
+            <summary>
+            Обчислює всі метрики графа.
+            </summary>
+            <param name="request">Дані графа.</param>
+            <returns>
+            <see cref="T:Microsoft.AspNetCore.Mvc.OkObjectResult"/> з усіма метриками графа,
+            або <see cref="T:Microsoft.AspNetCore.Mvc.BadRequestObjectResult"/> з описом помилки.
+            </returns>
+        </member>
+        <member name="M:GraphAn.Controllers.AnalysisController.RunDijkstra(GraphAn.UI.ViewModels.PathRequest)">
+            <summary>
+            Виконує алгоритм Дейкстри.
+            </summary>
+            <param name="request">Дані графа та параметри алгоритму.</param>
+            <returns>
+            <see cref="T:Microsoft.AspNetCore.Mvc.OkObjectResult"/> з результатом алгоритму,
+            або <see cref="T:Microsoft.AspNetCore.Mvc.BadRequestObjectResult"/> з описом помилки.
+            </returns>
+        </member>
+        <member name="M:GraphAn.Controllers.AnalysisController.RunFloydWarshall(GraphAn.UI.ViewModels.GraphRequest)">
+            <summary>
+            Виконує алгоритм Флойда-Воршела.
+            </summary>
+            <param name="request">Дані графа.</param>
+            <returns>
+            <see cref="T:Microsoft.AspNetCore.Mvc.OkObjectResult"/> з результатом алгоритму,
+            або <see cref="T:Microsoft.AspNetCore.Mvc.BadRequestObjectResult"/> з описом помилки.
+            </returns>
+        </member>
+        <member name="M:GraphAn.Controllers.AnalysisController.RunDfs(GraphAn.UI.ViewModels.TraversalRequest)">
+            <summary>
+            Виконує алгоритм пошуку вглиб (DFS).
+            </summary>
+            <param name="request">Дані графа та параметри алгоритму.</param>
+            <returns>
+            <see cref="T:Microsoft.AspNetCore.Mvc.OkObjectResult"/> з результатом алгоритму,
+            або <see cref="T:Microsoft.AspNetCore.Mvc.BadRequestObjectResult"/> з описом помилки.
+            </returns>
+        </member>
+        <member name="M:GraphAn.Controllers.AnalysisController.RunBfs(GraphAn.UI.ViewModels.TraversalRequest)">
+            <summary>
+            Виконує алгоритм пошуку вшир (BFS).
+            </summary>
+            <param name="request">Дані графа та параметри алгоритму.</param>
+            <returns>
+            <see cref="T:Microsoft.AspNetCore.Mvc.OkObjectResult"/> з результатом алгоритму,
+            або <see cref="T:Microsoft.AspNetCore.Mvc.BadRequestObjectResult"/> з описом помилки.
+            </returns>
+        </member>
+        <member name="M:GraphAn.Controllers.AnalysisController.ParseGraph(System.String)">
+            <summary>
+            Десеріалізує JSON рядок у модель графа.
+            </summary>
+            <param name="graphData">JSON рядок з даними графа.</param>
+            <returns><see cref="T:GraphAn.BLL.Models.GraphDto"/> якщо успішно; інакше <see langword="null"/>.</returns>
+        </member>
+        <member name="T:GraphAn.Controllers.AuthController">
+            <summary>
+            Контролер для автентифікації та реєстрації користувачів.
+            </summary>
+        </member>
+        <member name="M:GraphAn.Controllers.AuthController.#ctor(GraphAn.BLL.Interfaces.IEmailService,Microsoft.AspNetCore.Identity.UserManager{GraphAn.DAL.Models.User},Microsoft.AspNetCore.Identity.SignInManager{GraphAn.DAL.Models.User})">
+            <summary>
+            Initializes a new instance of the <see cref="T:GraphAn.Controllers.AuthController"/> class.
+            </summary>
+            <param name="emailService">Сервіс для роботи з email та автентифікацією.</param>
+            <param name="userManager">Менеджер користувачів Identity.</param>
+            <param name="signInManager">Менеджер входу Identity.</param>
+        </member>
+        <member name="M:GraphAn.Controllers.AuthController.StartRegister(GraphAn.UI.ViewModels.UserRequest)">
+            <summary>
+            Створює тимчасову реєстрацію та надсилає код підтвердження на email.
+            </summary>
+            <param name="request">Дані користувача для реєстрації.</param>
+            <returns>
+            <see cref="T:Microsoft.AspNetCore.Mvc.OkObjectResult"/> з повідомленням про успіх,
+            або <see cref="T:Microsoft.AspNetCore.Mvc.BadRequestObjectResult"/> з описом помилки.
+            </returns>
+        </member>
+        <member name="M:GraphAn.Controllers.AuthController.ConfirmRegister(GraphAn.UI.ViewModels.CodeConfirmRequest)">
+            <summary>
+            Підтверджує реєстрацію користувача за допомогою коду з email.
+            </summary>
+            <param name="request">Email та код підтвердження.</param>
+            <returns>
+            <see cref="T:Microsoft.AspNetCore.Mvc.OkObjectResult"/> з повідомленням про успіх,
+            або <see cref="T:Microsoft.AspNetCore.Mvc.BadRequestObjectResult"/> з описом помилки.
+            </returns>
+        </member>
+        <member name="M:GraphAn.Controllers.AuthController.Login(GraphAn.UI.ViewModels.UserLoginRequest)">
+            <summary>
+            Виконує вхід користувача за email або іменем користувача і паролем.
+            </summary>
+            <param name="request">Дані для входу.</param>
+            <returns>
+            <see cref="T:Microsoft.AspNetCore.Mvc.OkObjectResult"/> з повідомленням про успіх,
+            або <see cref="T:Microsoft.AspNetCore.Mvc.UnauthorizedObjectResult"/> з описом помилки.
+            </returns>
+        </member>
+        <member name="M:GraphAn.Controllers.AuthController.Logout">
+            <summary>
+            Виконує вихід користувача з системи.
+            </summary>
+            <returns>
+            <see cref="T:Microsoft.AspNetCore.Mvc.OkObjectResult"/> з повідомленням про успіх.
+            </returns>
+        </member>
+        <member name="M:GraphAn.Controllers.AuthController.ForgotPassword(GraphAn.UI.ViewModels.UserForgotPasswordRequest)">
+            <summary>
+            Надсилає на email посилання для скидання пароля.
+            </summary>
+            <param name="request">Email користувача.</param>
+            <returns>
+            <see cref="T:Microsoft.AspNetCore.Mvc.OkObjectResult"/> з повідомленням про успіх,
+            або <see cref="T:Microsoft.AspNetCore.Mvc.BadRequestObjectResult"/> з описом помилки.
+            </returns>
+        </member>
+        <member name="M:GraphAn.Controllers.AuthController.ResetPassword(GraphAn.UI.ViewModels.UserResetPasswordRequest)">
+            <summary>
+            Скидає пароль користувача за токеном.
+            </summary>
+            <param name="request">Дані для скидання пароля.</param>
+            <returns>
+            <see cref="T:Microsoft.AspNetCore.Mvc.OkObjectResult"/> з повідомленням про успіх,
+            або <see cref="T:Microsoft.AspNetCore.Mvc.BadRequestObjectResult"/> з описом помилки.
+            </returns>
+        </member>
+        <member name="M:GraphAn.Controllers.AuthController.GetCurrentUser">
+            <summary>
+            Отримує інформацію про поточного авторизованого користувача.
+            </summary>
+            <returns>
+            <see cref="T:Microsoft.AspNetCore.Mvc.OkObjectResult"/> з даними користувача,
+            або <see cref="T:Microsoft.AspNetCore.Mvc.UnauthorizedResult"/> якщо користувач не авторизований.
+            </returns>
+        </member>
+        <member name="T:GraphAn.Controllers.HomeController">
+            <summary>
+            Контролер для відображення сторінок застосунку.
+            </summary>
+        </member>
+        <member name="M:GraphAn.Controllers.HomeController.#ctor(Microsoft.Extensions.Logging.ILogger{GraphAn.Controllers.HomeController},GraphAn.BLL.Interfaces.IProjectService)">
+            <summary>
+            Initializes a new instance of the <see cref="T:GraphAn.Controllers.HomeController"/> class.
+            </summary>
+            <param name="logger">Об'єкт логера.</param>
+            <param name="projectService">Сервіс для роботи з проєктами.</param>
+        </member>
+        <member name="M:GraphAn.Controllers.HomeController.Index">
+            <summary>
+            Відображає головну сторінку застосунку.
+            </summary>
+            <returns><see cref="T:Microsoft.AspNetCore.Mvc.ViewResult"/> з головною сторінкою.</returns>
+        </member>
+        <member name="M:GraphAn.Controllers.HomeController.Error(System.Int32)">
+            <summary>
+            Маршрут для автоматичної обробки та відображення помилок HTTP.
+            </summary>
+            <param name="id">HTTP статус-код помилки.</param>
+            <returns><see cref="T:Microsoft.AspNetCore.Mvc.ViewResult"/> з детальною сторінкою помилки.</returns>
+        </member>
+        <member name="M:GraphAn.Controllers.HomeController.Login">
+            <summary>
+            Відображає сторінку входу у акаунт.
+            </summary>
+            <returns><see cref="T:Microsoft.AspNetCore.Mvc.ViewResult"/> зі сторінкою входу.</returns>
+        </member>
+        <member name="M:GraphAn.Controllers.HomeController.Register">
+            <summary>
+            Відображає сторінку реєстрації.
+            </summary>
+            <returns><see cref="T:Microsoft.AspNetCore.Mvc.ViewResult"/> зі сторінкою реєстрації.</returns>
+        </member>
+        <member name="M:GraphAn.Controllers.HomeController.ForgotPassword">
+            <summary>
+            Відображає сторінку для запиту відновлення пароля.
+            </summary>
+            <returns><see cref="T:Microsoft.AspNetCore.Mvc.ViewResult"/> зі сторінкою відновлення пароля.</returns>
+        </member>
+        <member name="M:GraphAn.Controllers.HomeController.Confirm">
+            <summary>
+            Відображає сторінку підтвердження електронної пошти.
+            </summary>
+            <returns><see cref="T:Microsoft.AspNetCore.Mvc.ViewResult"/> зі сторінкою підтвердження.</returns>
+        </member>
+        <member name="M:GraphAn.Controllers.HomeController.ResetPassword(System.String,System.String)">
+            <summary>
+            Відображає сторінку для скидання пароля.
+            </summary>
+            <param name="email">Електронна пошта користувача.</param>
+            <param name="token">Токен скидання пароля.</param>
+            <returns><see cref="T:Microsoft.AspNetCore.Mvc.ViewResult"/> зі сторінкою скидання пароля.</returns>
+        </member>
+        <member name="M:GraphAn.Controllers.HomeController.Projects">
+            <summary>
+            Відображає сторінку зі списком проектів користувача.
+            </summary>
+            <returns><see cref="T:Microsoft.AspNetCore.Mvc.ViewResult"/> зі сторінкою списку проектів.</returns>
+        </member>
+        <member name="M:GraphAn.Controllers.HomeController.Project(System.Guid)">
+            <summary>
+            Відображає сторінку редактора проекту.
+            </summary>
+            <param name="id">Ідентифікатор проекту.</param>
+            <returns>
+            <see cref="T:Microsoft.AspNetCore.Mvc.ViewResult"/> зі сторінкою редактора проекту,
+            або <see cref="T:Microsoft.AspNetCore.Mvc.RedirectResult"/> на сторінку логіну, якщо користувач не авторизований,
+            або <see cref="T:Microsoft.AspNetCore.Mvc.NotFoundResult"/> якщо проект не знайдено.
+            </returns>
+        </member>
+        <member name="M:GraphAn.Controllers.HomeController.Privacy">
+            <summary>
+            Відображає сторінку політики конфіденційності.
+            </summary>
+            <returns><see cref="T:Microsoft.AspNetCore.Mvc.ViewResult"/> зі сторінкою конфіденційності.</returns>
+        </member>
+        <member name="T:GraphAn.Controllers.ProjectController">
+            <summary>
+            Контролер для роботи з проєктами.
+            </summary>
+        </member>
+        <member name="M:GraphAn.Controllers.ProjectController.#ctor(GraphAn.BLL.Interfaces.IProjectService)">
+            <summary>
+            Initializes a new instance of the <see cref="T:GraphAn.Controllers.ProjectController"/> class.
+            </summary>
+            <param name="projectService">Сервіс для роботи з проєктами.</param>
+        </member>
+        <member name="M:GraphAn.Controllers.ProjectController.CreateProject(GraphAn.UI.ViewModels.CreateProjectRequest)">
+            <summary>
+            Створює новий порожній проєкт.
+            </summary>
+            <param name="request">Дані для створення проєкту.</param>
+            <returns>
+            <see cref="T:Microsoft.AspNetCore.Mvc.OkObjectResult"/> з ідентифікатором створеного проєкту,
+            або <see cref="T:Microsoft.AspNetCore.Mvc.BadRequestObjectResult"/> з описом помилки.
+            </returns>
+        </member>
+        <member name="M:GraphAn.Controllers.ProjectController.SaveProject(GraphAn.UI.ViewModels.SaveProjectRequest)">
+            <summary>
+            Зберігає дані існуючого проєкту.
+            </summary>
+            <param name="request">Дані для збереження проєкту.</param>
+            <returns>
+            <see cref="T:Microsoft.AspNetCore.Mvc.OkObjectResult"/> з повідомленням про успіх,
+            або <see cref="T:Microsoft.AspNetCore.Mvc.BadRequestObjectResult"/> з описом помилки.
+            </returns>
+        </member>
+        <member name="M:GraphAn.Controllers.ProjectController.GetProjects">
+            <summary>
+            Отримує список проєктів користувача без даних графа.
+            </summary>
+            <returns>
+            <see cref="T:Microsoft.AspNetCore.Mvc.OkObjectResult"/> зі списком проєктів,
+            або <see cref="T:Microsoft.AspNetCore.Mvc.UnauthorizedObjectResult"/> з описом помилки.
+            </returns>
+        </member>
+        <member name="M:GraphAn.Controllers.ProjectController.GetProject(System.Guid)">
+            <summary>
+            Отримує проєкт з даними графа за ідентифікатором.
+            </summary>
+            <param name="projectId">Ідентифікатор проєкту.</param>
+            <returns>
+            <see cref="T:Microsoft.AspNetCore.Mvc.OkObjectResult"/> з даними проєкту,
+            або <see cref="T:Microsoft.AspNetCore.Mvc.NotFoundObjectResult"/> з описом помилки.
+            </returns>
+        </member>
+        <member name="M:GraphAn.Controllers.ProjectController.DeleteProject(System.Guid)">
+            <summary>
+            Видаляє проект користувача за ідентифікатором.
+            </summary>
+            <param name="projectId">Ідентифікатор проекту.</param>
+            <returns>
+            <see cref="T:Microsoft.AspNetCore.Mvc.OkObjectResult"/> з повідомленням про успіх,
+            або <see cref="T:Microsoft.AspNetCore.Mvc.NotFoundObjectResult"/> з описом помилки.
+            </returns>
+        </member>
+        <member name="T:GraphAn.UI.Program">
+            <summary>
+            Забезпечує вхідну точку у програму.
+            </summary>
+        </member>
+        <member name="M:GraphAn.UI.Program.Main(System.String[])">
+            <summary>
+             Головна точка входу у програму.
+            </summary>
+            <param name="args">Додаткові аргументи.</param>
+        </member>
+        <member name="T:GraphAn.UI.ViewModels.CodeConfirmRequest">
+            <summary>
+            Запит для підтвердження реєстрації користувача.
+            </summary>
+        </member>
+        <member name="P:GraphAn.UI.ViewModels.CodeConfirmRequest.Email">
+            <summary>
+            Отримує або задає електронна пошта користувача.
+            </summary>
+        </member>
+        <member name="P:GraphAn.UI.ViewModels.CodeConfirmRequest.Code">
+            <summary>
+            Отримує або задає код підтвердження.
+            </summary>
+        </member>
+        <member name="T:GraphAn.UI.ViewModels.CreateProjectRequest">
+            <summary>
+            Запит для створення нового проекту.
+            </summary>
+        </member>
+        <member name="P:GraphAn.UI.ViewModels.CreateProjectRequest.Name">
+            <summary>
+            Отримує або задає назву проекту.
+            </summary>
+        </member>
+        <member name="T:GraphAn.UI.ViewModels.CreateProjectResponse">
+            <summary>
+            Відповідь після успішного створення проекту.
+            </summary>
+        </member>
+        <member name="P:GraphAn.UI.ViewModels.CreateProjectResponse.ProjectId">
+            <summary>
+            Отримує або задає ідентифікатор створеного проекту.
+            </summary>
+        </member>
+        <member name="P:GraphAn.UI.ViewModels.CreateProjectResponse.Message">
+            <summary>
+            Отримує або задає повідомлення про результат операції.
+            </summary>
+        </member>
+        <member name="T:GraphAn.UI.ViewModels.ErrorResponse">
+            <summary>
+            Відповідь з описом помилки.
+            </summary>
+        </member>
+        <member name="P:GraphAn.UI.ViewModels.ErrorResponse.Message">
+            <summary>
+            Отримує або задає опис помилки.
+            </summary>
+        </member>
+        <member name="T:GraphAn.UI.ViewModels.GraphRequest">
+            <summary>
+            Запит з даними графа.
+            </summary>
+        </member>
+        <member name="P:GraphAn.UI.ViewModels.GraphRequest.GraphData">
+            <summary>
+            Отримує або задає дані графа у форматі JSON.
+            </summary>
+        </member>
+        <member name="T:GraphAn.UI.ViewModels.PathRequest">
+            <summary>
+            Запит для алгоритмів пошуку шляху.
+            </summary>
+        </member>
+        <member name="P:GraphAn.UI.ViewModels.PathRequest.GraphData">
+            <summary>
+            Отримує або задає дані графа у форматі JSON.
+            </summary>
+        </member>
+        <member name="P:GraphAn.UI.ViewModels.PathRequest.StartId">
+            <summary>
+            Отримує або задає ідентифікатор початкової вершини.
+            </summary>
+        </member>
+        <member name="P:GraphAn.UI.ViewModels.PathRequest.EndId">
+            <summary>
+            Отримує або задає ідентифікатор кінцевої вершини.
+            </summary>
+        </member>
+        <member name="T:GraphAn.UI.ViewModels.ProjectListResponse">
+            <summary>
+            Відповідь зі списком проектів користувача.
+            </summary>
+        </member>
+        <member name="P:GraphAn.UI.ViewModels.ProjectListResponse.Projects">
+            <summary>
+            Отримує або задає список проектів.
+            </summary>
+        </member>
+        <member name="T:GraphAn.UI.ViewModels.ProjectResponse">
+            <summary>
+            Повна інформація про проект з даними графа.
+            </summary>
+        </member>
+        <member name="P:GraphAn.UI.ViewModels.ProjectResponse.ProjectId">
+            <summary>
+            Отримує або задає ідентифікатор проекту.
+            </summary>
+        </member>
+        <member name="P:GraphAn.UI.ViewModels.ProjectResponse.Name">
+            <summary>
+            Отримує або задає назву проекту.
+            </summary>
+        </member>
+        <member name="P:GraphAn.UI.ViewModels.ProjectResponse.GraphData">
+            <summary>
+            Отримує або задає дані графа у форматі JSON.
+            </summary>
+        </member>
+        <member name="P:GraphAn.UI.ViewModels.ProjectResponse.CreatedAt">
+            <summary>
+            Отримує або задає час створення проекту.
+            </summary>
+        </member>
+        <member name="P:GraphAn.UI.ViewModels.ProjectResponse.UpdatedAt">
+            <summary>
+            Отримує або задає час останнього оновлення проекту.
+            </summary>
+        </member>
+        <member name="T:GraphAn.UI.ViewModels.ProjectShortResponse">
+            <summary>
+            Коротка інформація про проект без даних графа.
+            </summary>
+        </member>
+        <member name="P:GraphAn.UI.ViewModels.ProjectShortResponse.ProjectId">
+            <summary>
+            Отримує або задає ідентифікатор проекту.
+            </summary>
+        </member>
+        <member name="P:GraphAn.UI.ViewModels.ProjectShortResponse.Name">
+            <summary>
+            Отримує або задає назву проекту.
+            </summary>
+        </member>
+        <member name="P:GraphAn.UI.ViewModels.ProjectShortResponse.CreatedAt">
+            <summary>
+            Отримує або задає час створення проекту.
+            </summary>
+        </member>
+        <member name="P:GraphAn.UI.ViewModels.ProjectShortResponse.UpdatedAt">
+            <summary>
+            Отримує або задає час останнього оновлення проекту.
+            </summary>
+        </member>
+        <member name="T:GraphAn.UI.ViewModels.ProjectViewModel">
+            <summary>
+            Модель представлення для сторінки редактора проєкту.
+            </summary>
+        </member>
+        <member name="P:GraphAn.UI.ViewModels.ProjectViewModel.ProjectId">
+            <summary>
+            Отримує або задає унікальний ідентифікатор проєкту.
+            </summary>
+        </member>
+        <member name="P:GraphAn.UI.ViewModels.ProjectViewModel.Name">
+            <summary>
+            Отримує або задає назву проєкту.
+            </summary>
+        </member>
+        <member name="P:GraphAn.UI.ViewModels.ProjectViewModel.GraphData">
+            <summary>
+            Отримує або задає дані графа у форматі JSON.
+            </summary>
+        </member>
+        <member name="T:GraphAn.UI.ViewModels.RegisterViewModel">
+            <summary>
+            Модель представлення для сторінки реєстрації.
+            </summary>
+        </member>
+        <member name="P:GraphAn.UI.ViewModels.RegisterViewModel.UserName">
+            <summary>
+            Отримує або задає ім'я користувача (логін).
+            </summary>
+        </member>
+        <member name="P:GraphAn.UI.ViewModels.RegisterViewModel.Email">
+            <summary>
+            Отримує або задає електронну пошту користувача.
+            </summary>
+        </member>
+        <member name="P:GraphAn.UI.ViewModels.RegisterViewModel.Password">
+            <summary>
+            Отримує або задає пароль.
+            </summary>
+        </member>
+        <member name="T:GraphAn.UI.ViewModels.SaveProjectRequest">
+            <summary>
+            Запит для збереження існуючого проекту.
+            </summary>
+        </member>
+        <member name="P:GraphAn.UI.ViewModels.SaveProjectRequest.ProjectId">
+            <summary>
+            Отримує або задає ідентифікатор проекту.
+            </summary>
+        </member>
+        <member name="P:GraphAn.UI.ViewModels.SaveProjectRequest.Name">
+            <summary>
+            Отримує або задає нову назву проекту.
+            </summary>
+        </member>
+        <member name="P:GraphAn.UI.ViewModels.SaveProjectRequest.GraphData">
+            <summary>
+            Отримує або задає дані графа у форматі JSON.
+            </summary>
+        </member>
+        <member name="T:GraphAn.UI.ViewModels.SuccessResponse">
+            <summary>
+            Відповідь з описом успішної операції.
+            </summary>
+        </member>
+        <member name="P:GraphAn.UI.ViewModels.SuccessResponse.Message">
+            <summary>
+            Отримує або задає опис результату операції.
+            </summary>
+        </member>
+        <member name="T:GraphAn.UI.ViewModels.TraversalRequest">
+            <summary>
+            Запит для алгоритмів обходу графа.
+            </summary>
+        </member>
+        <member name="P:GraphAn.UI.ViewModels.TraversalRequest.GraphData">
+            <summary>
+            Отримує або задає дані графа у форматі JSON.
+            </summary>
+        </member>
+        <member name="P:GraphAn.UI.ViewModels.TraversalRequest.StartId">
+            <summary>
+            Отримує або задає ідентифікатор початкової вершини.
+            </summary>
+        </member>
+        <member name="T:GraphAn.UI.ViewModels.UserForgotPasswordRequest">
+            <summary>
+            Запит для відновлення пароля (надсилання листа з посиланням).
+            </summary>
+        </member>
+        <member name="P:GraphAn.UI.ViewModels.UserForgotPasswordRequest.Email">
+            <summary>
+            Отримує або задає електронну пошту користувача.
+            </summary>
+        </member>
+        <member name="T:GraphAn.UI.ViewModels.UserLoginRequest">
+            <summary>
+            Запит для входу користувача в систему.
+            </summary>
+        </member>
+        <member name="P:GraphAn.UI.ViewModels.UserLoginRequest.Login">
+            <summary>
+            Отримує або задає логін (може бути email або ім'я користувача).
+            </summary>
+        </member>
+        <member name="P:GraphAn.UI.ViewModels.UserLoginRequest.Password">
+            <summary>
+            Отримує або задає пароль користувача.
+            </summary>
+        </member>
+        <member name="P:GraphAn.UI.ViewModels.UserLoginRequest.RememberMe">
+            <summary>
+            Отримує або задає значення, чи потрібно запам'ятати користувача.
+            </summary>
+        </member>
+        <member name="T:GraphAn.UI.ViewModels.UserRequest">
+            <summary>
+            Запит з даними користувача для реєстрації або входу.
+            </summary>
+        </member>
+        <member name="P:GraphAn.UI.ViewModels.UserRequest.Email">
+            <summary>
+            Отримує або задає електронну пошту користувача.
+            </summary>
+        </member>
+        <member name="P:GraphAn.UI.ViewModels.UserRequest.UserName">
+            <summary>
+            Отримує або задає ім'я користувача.
+            </summary>
+        </member>
+        <member name="P:GraphAn.UI.ViewModels.UserRequest.Password">
+            <summary>
+            Отримує або задає пароль користувача.
+            </summary>
+        </member>
+        <member name="T:GraphAn.UI.ViewModels.UserResetPasswordRequest">
+            <summary>
+            Запит для скидання пароля після отримання токена.
+            </summary>
+        </member>
+        <member name="P:GraphAn.UI.ViewModels.UserResetPasswordRequest.Email">
+            <summary>
+            Отримує або задає електронну пошту користувача.
+            </summary>
+        </member>
+        <member name="P:GraphAn.UI.ViewModels.UserResetPasswordRequest.Token">
+            <summary>
+            Отримує або задає токен скидання пароля, отриманий з листа.
+            </summary>
+        </member>
+        <member name="P:GraphAn.UI.ViewModels.UserResetPasswordRequest.NewPassword">
+            <summary>
+            Отримує або задає новий пароль.
+            </summary>
+        </member>
+        <member name="T:GraphAn.ViewModels.ErrorViewModel">
+            <summary>
+            Модель для відображення помилок.
+            </summary>
+        </member>
+        <member name="P:GraphAn.ViewModels.ErrorViewModel.RequestId">
+            <summary>
+            Отримує або задає ідентифікатор запиту.
+            </summary>
+        </member>
+        <member name="P:GraphAn.ViewModels.ErrorViewModel.ShowRequestId">
+            <summary>
+            Вказує, чи потрібно відображати ідентифікатор запиту.
+            </summary>
+        </member>
+    </members>
+</doc>

@@ -1,4 +1,4 @@
-﻿// <copyright file="HomeController.cs" company="GraphAn">
+// <copyright file="HomeController.cs" company="GraphAn">
 // Copyright (c) GraphAn. All rights reserved.
 // </copyright>
 
@@ -7,6 +7,7 @@ namespace GraphAn.Controllers
     using System.Security.Claims;
     using GraphAn.BLL.Interfaces;
     using GraphAn.UI.ViewModels;
+    using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
 
     /// <summary>
@@ -36,6 +37,21 @@ namespace GraphAn.Controllers
         public IActionResult Index()
         {
             this.logger.LogInformation("Відкрито головну сторінку");
+            return this.View();
+        }
+
+        /// <summary>
+        /// Маршрут для автоматичної обробки та відображення помилок HTTP.
+        /// </summary>
+        /// <param name="id">HTTP статус-код помилки.</param>
+        /// <returns><see cref="ViewResult"/> з детальною сторінкою помилки.</returns>
+        [HttpGet("Home/Error/{id:int}")]
+        public IActionResult Error(int id)
+        {
+            this.logger.LogWarning("Зафіксовано помилку HTTP {StatusCode} для користувача", id);
+
+            // Передаємо код помилки у View
+            this.ViewData["ErrorCode"] = id;
             return this.View();
         }
 
@@ -91,7 +107,6 @@ namespace GraphAn.Controllers
         [HttpGet("reset-password")]
         public IActionResult ResetPassword(string email, string token)
         {
-            // Передати email і token у View через ViewBag або модель
             this.ViewBag.Email = email;
             this.ViewBag.Token = token;
             return this.View();
@@ -101,6 +116,7 @@ namespace GraphAn.Controllers
         /// Відображає сторінку зі списком проектів користувача.
         /// </summary>
         /// <returns><see cref="ViewResult"/> зі сторінкою списку проектів.</returns>
+        [Authorize]
         [HttpGet]
         public IActionResult Projects()
         {
@@ -117,16 +133,15 @@ namespace GraphAn.Controllers
         /// або <see cref="RedirectResult"/> на сторінку логіну, якщо користувач не авторизований,
         /// або <see cref="NotFoundResult"/> якщо проект не знайдено.
         /// </returns>
+        [Authorize]
         public async Task<IActionResult> Project(Guid id)
         {
-            // Отримуємо ідентифікатор поточного користувача з Claims
             var userIdClaim = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userIdClaim == null || !Guid.TryParse(userIdClaim, out var userId))
             {
                 return this.RedirectToAction("Login", "Home");
             }
 
-            // Викликаємо сервіс для отримання проєкту
             var result = await this.projectService.GetProjectAsync(userId, id);
             if (!result.Success || result.Project == null)
             {
@@ -139,6 +154,9 @@ namespace GraphAn.Controllers
                 Name = result.Project.Name,
                 GraphData = result.Project.GraphData,
             };
+
+            // Активуємо режим полотна, щоб приховати глобальний футер шаблону
+            this.ViewData["IsCanvasPage"] = true;
 
             return this.View(viewModel);
         }

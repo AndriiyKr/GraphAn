@@ -1,10 +1,9 @@
-﻿// <copyright file="Program.cs" company="GraphAn">
+// <copyright file="Program.cs" company="GraphAn">
 // Copyright (c) GraphAn. All rights reserved.
 // </copyright>
 
 namespace GraphAn.UI
 {
-    using System.Text;
     using DotNetEnv;
     using GraphAn.BLL.Interfaces;
     using GraphAn.BLL.Services;
@@ -14,6 +13,7 @@ namespace GraphAn.UI
     using Microsoft.AspNetCore.Identity;
     using Microsoft.EntityFrameworkCore;
     using Serilog;
+    using System.Text;
 
     /// <summary>
     /// Забезпечує вхідну точку у програму.
@@ -142,6 +142,8 @@ namespace GraphAn.UI
                     app.UseExceptionHandler("/Home/Error");
                     app.UseHsts();
                 }
+                app.UseStatusCodePagesWithReExecute("/Home/Error/{0}");
+                app.UseHttpsRedirection();
 
                 // app.UseHttpsRedirection();
                 app.UseStaticFiles();
